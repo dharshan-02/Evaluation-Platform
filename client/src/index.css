@@ -246,3 +246,15 @@ body {
   0% { opacity: 0; transform: scale(0.96); }
   100% { opacity: 1; transform: scale(1); }
 }
+
+
+/* Monaco Editor Context Menu Cleanup */
+.monaco-menu .action-item:has([aria-label="Go to Definition"]),
+.monaco-menu .action-item:has([aria-label="Go to References"]),
+.monaco-menu .action-item:has([aria-label="Go to Symbol..."]),
+.monaco-menu .action-item:has([aria-label^="Peek"]),
+.monaco-menu .action-item:has([aria-label="Rename Symbol"]),
+.monaco-menu .action-item:has([aria-label="Change All Occurrences"]),
+.monaco-menu .action-item:has([aria-label="Format Document"]) {
+  display: none !important;
+}

@@ -3,6 +3,8 @@ const TestCase = require('../models/TestCase');
 const ExecutionResult = require('../models/ExecutionResult');
 const Assignment = require('../models/Assignment');
 const Notification = require('../models/Notification');
+const Challenge = require('../models/Challenge');
+const User = require('../models/User');
 const socket = require('../socket');
 const { executeInDocker } = require('../services/executionService');
 
@@ -331,4 +333,91 @@ const executePublicTestCases = async (req, res, next) => {
   }
 };
 
-module.exports = { executeSubmission, getExecutionResults, executeCodePlayground, executePublicTestCases };
+/**
+ * @route   POST /api/execute/challenge/:id
+ * @desc    Execute a playground challenge against test cases
+ * @access  Private
+ */
+const executeChallenge = async (req, res, next) => {
+  try {
+    const { code, language } = req.body;
+    const challenge = await Challenge.findById(req.params.id);
+
+    if (!challenge) {
+      return res.status(404).json({ success: false, message: 'Challenge not found' });
+    }
+
+    if (!code || !language) {
+      return res.status(400).json({ success: false, message: 'Code and language are required.' });
+    }
+
+    const timeLimit = 5000;
+    const memoryLimit = 256;
+    let allPassed = true;
+    const results = [];
+
+    // Run against each test case
+    for (const tc of challenge.testCases) {
+      const result = await executeInDocker(
+        code,
+        language,
+        tc.input || '',
+        timeLimit,
+        memoryLimit
+      );
+
+      const actualOutput = result.output ? result.output.trim() : '';
+      const expectedOutput = tc.expectedOutput ? tc.expectedOutput.trim() : '';
+      const passed = actualOutput === expectedOutput && !result.error;
+
+      if (!passed) allPassed = false;
+
+      results.push({
+        input: tc.isHidden ? 'Hidden Test Case' : tc.input,
+        expectedOutput: tc.isHidden ? 'Hidden Output' : expectedOutput,
+        actualOutput: tc.isHidden && passed ? 'Hidden Output' : actualOutput,
+        passed,
+        error: result.error,
+        executionTime: result.executionTime,
+      });
+    }
+
+    // Award points if all passed
+    let pointsAwarded = 0;
+    if (allPassed && req.user) {
+      const user = await User.findById(req.user.id);
+      
+      const alreadyCompleted = user.completedChallenges.includes(challenge._id);
+      
+      if (!alreadyCompleted) {
+        user.completedChallenges.push(challenge._id);
+        user.points += challenge.points;
+        pointsAwarded = challenge.points;
+        
+        challenge.completions += 1;
+        await challenge.save();
+
+        // Badge logic
+        if (user.points >= 100 && !user.badges.includes('Code Ninja')) {
+          user.badges.push('Code Ninja');
+        }
+        if (challenge.level === 'Advanced' && !user.badges.includes('Bug Squasher')) {
+          user.badges.push('Bug Squasher');
+        }
+
+        await user.save();
+      }
+    }
+
+    res.json({
+      success: true,
+      allPassed,
+      results,
+      pointsAwarded
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { executeSubmission, getExecutionResults, executeCodePlayground, executePublicTestCases, executeChallenge };

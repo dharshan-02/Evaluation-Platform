@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './useAuth';
 
-export const useSocket = (url = 'http://localhost:5000') => {
+export const useSocket = (url = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000') => {
   const { user } = useAuth();
   const socketRef = useRef(null);
 

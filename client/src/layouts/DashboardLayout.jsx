@@ -19,6 +19,8 @@ import {
   HiOutlineSun,
   HiOutlineSearch,
   HiOutlineTerminal,
+  HiOutlineStar,
+  HiOutlineUserGroup,
 } from 'react-icons/hi';
 import { useAuth } from '../hooks/useAuth';
 import { useSocket } from '../hooks/useSocket';
@@ -27,10 +29,12 @@ import api from '../lib/api';
 
 const navItems = [
   { label: 'Dashboard', icon: HiOutlineHome, path: '/dashboard', roles: ['admin', 'faculty', 'student'] },
-  { label: 'Assignments', icon: HiOutlineDocumentText, path: '/assignments', roles: ['admin', 'faculty', 'student'] },
-  { label: 'Submissions', icon: HiOutlineCloudUpload, path: '/submissions', roles: ['admin', 'faculty', 'student'] },
-  { label: 'Projects', icon: HiOutlineClipboardList, path: '/projects', roles: ['admin', 'faculty', 'student'] },
-  { label: 'Playground', icon: HiOutlineTerminal, path: '/playground', roles: ['admin', 'faculty', 'student'] },
+  { label: 'Assignments', icon: HiOutlineDocumentText, path: '/assignments', roles: ['faculty', 'student'] },
+  { label: 'Submissions', icon: HiOutlineCloudUpload, path: '/submissions', roles: ['faculty', 'student'] },
+  { label: 'Projects', icon: HiOutlineClipboardList, path: '/projects', roles: ['faculty', 'student'] },
+  { label: 'Collaboration', icon: HiOutlineUserGroup, path: '/collaboration', roles: ['admin', 'faculty', 'student'] },
+  { label: 'Playground', icon: HiOutlineTerminal, path: '/playground', roles: ['student'] },
+  { label: 'Leaderboard', icon: HiOutlineStar, path: '/leaderboard', roles: ['faculty', 'student'] },
   { label: 'Plagiarism', icon: HiOutlineShieldCheck, path: '/plagiarism', roles: ['admin', 'faculty'] },
   { label: 'Analytics', icon: HiOutlineChartBar, path: '/analytics', roles: ['admin', 'faculty'] },
   { label: 'Reports', icon: HiOutlineDocumentReport, path: '/reports', roles: ['admin', 'faculty', 'student'] },

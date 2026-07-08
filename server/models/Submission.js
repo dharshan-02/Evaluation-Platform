@@ -83,7 +83,8 @@ const submissionSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
-    plagiarismScore: {
+    aiPlagiarismReport: { type: Object },
+  plagiarismScore: {
       type: Number,
       default: 0,
       min: 0,

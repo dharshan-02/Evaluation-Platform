@@ -5,7 +5,9 @@ import {
   HiOutlineMail,
   HiOutlineIdentification,
   HiOutlineAcademicCap,
-  HiOutlineCamera
+  HiOutlineCamera,
+  HiOutlineFire,
+  HiOutlineStar
 } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
@@ -161,6 +163,90 @@ const ProfilePage = () => {
           </form>
         </div>
       </div>
+
+      {/* Gamification Section (Students Only) */}
+      {user?.role === 'student' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Stats & Badges */}
+          <div className="glass p-6 rounded-2xl md:col-span-1 space-y-6">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                <HiOutlineStar className="w-5 h-5 text-amber-500" />
+                Achievements
+              </h3>
+              
+              <div className="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl mb-4 border border-indigo-100 dark:border-indigo-500/20">
+                <div>
+                  <div className="text-xs text-indigo-500 font-bold uppercase tracking-wider">Total Points</div>
+                  <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{user?.points || 0}</div>
+                </div>
+                <HiOutlineStar className="w-10 h-10 text-indigo-400 opacity-50" />
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-500/20">
+                <div>
+                  <div className="text-xs text-orange-500 font-bold uppercase tracking-wider">Current Streak</div>
+                  <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{user?.currentStreak || 0} <span className="text-sm font-medium text-slate-500">days</span></div>
+                </div>
+                <HiOutlineFire className="w-10 h-10 text-orange-400 opacity-50" />
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Badges</h4>
+              <div className="flex flex-wrap gap-2">
+                {user?.badges?.length > 0 ? (
+                  user.badges.map((badge, idx) => (
+                    <div key={idx} className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-lg text-amber-600 dark:text-amber-400 font-semibold text-xs shadow-sm">
+                      <HiOutlineStar className="w-3.5 h-3.5" />
+                      {badge}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-500">No badges earned yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Activity Heatmap */}
+          <div className="glass p-6 rounded-2xl md:col-span-2 flex flex-col">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Coding Activity</h3>
+            <p className="text-xs text-slate-500 mb-6">Your activity over the last 30 days</p>
+            
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex gap-1.5">
+                {Array.from({ length: 30 }).map((_, i) => {
+                  const date = new Date();
+                  date.setDate(date.getDate() - (29 - i));
+                  const dateString = date.toISOString().split('T')[0];
+                  
+                  // Check if user was active on this date
+                  const isActive = user?.activityDates?.includes(dateString);
+                  
+                  return (
+                    <div 
+                      key={i} 
+                      title={dateString}
+                      className={`w-4 h-12 rounded-sm transition-all duration-300 ${
+                        isActive 
+                          ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' 
+                          : 'bg-slate-200 dark:bg-slate-800'
+                      }`}
+                    ></div>
+                  );
+                })}
+              </div>
+            </div>
+            
+            <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+              <span>30 days ago</span>
+              <span>Today</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -11,9 +11,11 @@ import {
   HiOutlineXCircle,
   HiOutlineTerminal,
   HiOutlineCode,
-  HiOutlinePlay
+  HiOutlinePlay,
+  HiOutlineTrash
 } from 'react-icons/hi';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 
 const LANGUAGE_TEMPLATES = {
   javascript: `// Write your JavaScript code here
@@ -243,6 +245,17 @@ const AssignmentDetailsPage = () => {
     }
   };
 
+  const handleDeleteAssignment = async () => {
+    if (!window.confirm('Are you sure you want to delete this assignment?')) return;
+    try {
+      await api.delete(`/assignments/${id}`);
+      toast.success('Assignment deleted successfully');
+      navigate('/assignments');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete assignment');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full min-h-[60vh]">
@@ -250,6 +263,8 @@ const AssignmentDetailsPage = () => {
       </div>
     );
   }
+
+  const isAdminOrFaculty = ['admin', 'faculty'].includes(user?.role);
 
   if (error || !assignment) {
     return (
@@ -324,7 +339,14 @@ const AssignmentDetailsPage = () => {
                     <span className="text-xs font-bold px-2 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">Draft</span>
                   )}
                 </div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{assignment.title}</h1>
+                <div className="flex items-center justify-between mb-2">
+                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{assignment.title}</h1>
+                  {isAdminOrFaculty && (
+                    <button onClick={handleDeleteAssignment} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors" title="Delete Assignment">
+                      <HiOutlineTrash className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
                   <span className="flex items-center gap-1.5"><HiOutlineClock className="w-4 h-4" /> Due: {format(new Date(assignment.dueDate), 'MMM dd, yyyy h:mm a')}</span>
                 </div>

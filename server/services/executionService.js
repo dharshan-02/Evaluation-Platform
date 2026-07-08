@@ -73,11 +73,7 @@ const LANG_CONFIG = {
  * Check if Docker is available on the system.
  */
 async function isDockerAvailable() {
-  return new Promise((resolve) => {
-    exec('docker info', { timeout: 5000 }, (error) => {
-      resolve(!error);
-    });
-  });
+  return false; // Force direct execution for development
 }
 
 /**

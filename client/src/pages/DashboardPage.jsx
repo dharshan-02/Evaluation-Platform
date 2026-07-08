@@ -9,6 +9,7 @@ import {
   HiOutlineChartBar,
   HiOutlineShieldCheck,
   HiOutlineAcademicCap,
+  HiOutlineDownload,
 } from 'react-icons/hi';
 import { useAuth } from '../hooks/useAuth';
 import { useSocket } from '../hooks/useSocket';
@@ -71,11 +72,34 @@ const StatsCard = ({ icon: Icon, label, value, gradient, accentColor }) => (
 /**
  * Student Dashboard
  */
-const StudentDashboard = ({ data }) => (
-  <motion.div variants={containerVariants} initial="hidden" animate="visible">
-    {/* Stats Grid */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <StatsCard
+const StudentDashboard = ({ data }) => {
+  const handleDownloadTranscript = () => {
+    // Open the PDF download endpoint in a new tab or trigger download
+    window.open(`http://localhost:5000/api/users/me/report?token=${localStorage.getItem('token')}`, '_blank');
+  };
+
+  return (
+    <motion.div variants={containerVariants} initial="hidden" animate="visible">
+      {/* Action Bar */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <HiOutlineAcademicCap className="w-6 h-6 text-indigo-500" />
+            My Progress
+          </h2>
+        </div>
+        <button
+          onClick={handleDownloadTranscript}
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold rounded-lg shadow-sm shadow-indigo-500/20 transition-all hover:-translate-y-0.5"
+        >
+          <HiOutlineDownload className="w-5 h-5" />
+          Download Transcript
+        </button>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatsCard
         icon={HiOutlineDocumentText}
         label="Active Assignments"
         value={data?.stats?.activeAssignments || 0}
@@ -175,7 +199,8 @@ const StudentDashboard = ({ data }) => (
       </motion.div>
     </div>
   </motion.div>
-);
+  );
+};
 
 /**
  * Faculty Dashboard

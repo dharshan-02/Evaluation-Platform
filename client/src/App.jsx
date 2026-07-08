@@ -13,6 +13,7 @@ import LoginPage from './pages/LoginPage';
 // Dashboard
 import DashboardPage from './pages/DashboardPage';
 import PlaygroundPage from './pages/PlaygroundPage';
+import LeaderboardPage from './pages/LeaderboardPage';
 
 // Assignment Pages
 import AssignmentsPage from './pages/AssignmentsPage';
@@ -27,6 +28,8 @@ import SubmissionDetailsPage from './pages/SubmissionDetailsPage';
 import ProjectsPage from './pages/ProjectsPage';
 import CreateProjectPage from './pages/CreateProjectPage';
 import ProjectDetailsPage from './pages/ProjectDetailsPage';
+import CollaborationPage from './pages/CollaborationPage';
+import CollaborationHubPage from './pages/CollaborationHubPage';
 
 // Plagiarism & Analytics
 import PlagiarismPage from './pages/PlagiarismPage';
@@ -193,6 +196,7 @@ function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="playground" element={<PlaygroundPage />} />
+          <Route path="leaderboard" element={<LeaderboardPage />} />
           <Route path="profile" element={<ProfilePage />} />
 
           {/* Assignment Routes */}
@@ -216,6 +220,23 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="projects/:id" element={<ProjectDetailsPage />} />
+          <Route path="projects/:id/collaborate" element={
+            <ProtectedRoute roles={['admin', 'faculty', 'student']}>
+              <CollaborationPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Ad-Hoc Collaboration Hub */}
+          <Route path="collaboration" element={
+            <ProtectedRoute roles={['admin', 'faculty', 'student']}>
+              <CollaborationHubPage />
+            </ProtectedRoute>
+          } />
+          <Route path="collaboration/:id" element={
+            <ProtectedRoute roles={['admin', 'faculty', 'student']}>
+              <CollaborationPage />
+            </ProtectedRoute>
+          } />
 
           {/* Plagiarism & Analytics Routes */}
           <Route path="plagiarism" element={

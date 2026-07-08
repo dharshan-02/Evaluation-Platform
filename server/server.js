@@ -53,6 +53,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/assignments', require('./routes/assignmentRoutes'));
 app.use('/api/submissions', require('./routes/submissionRoutes'));
 app.use('/api/execute', require('./routes/executionRoutes'));
+app.use('/api/gamification', require('./routes/gamificationRoutes'));
 app.use('/api/plagiarism', require('./routes/plagiarismRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
@@ -60,6 +61,8 @@ app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/audit', require('./routes/auditRoutes'));
+app.use('/api/workspaces', require('./routes/workspaceRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
 
 // --------------- Error Handling ---------------
 

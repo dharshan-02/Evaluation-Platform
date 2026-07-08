@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const reviewSchema = new mongoose.Schema({
   name: {
@@ -61,7 +62,11 @@ const projectSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  reviews: [reviewSchema]
+  reviews: [reviewSchema],
+  collabPin: {
+    type: String,
+    default: () => crypto.randomInt(1000, 10000).toString()
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Project', projectSchema);

@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
  * - Shows toast notifications on errors
  */
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

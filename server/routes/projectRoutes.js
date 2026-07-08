@@ -12,9 +12,13 @@ router.use(auth);
 router.post('/', authorize('student'), projectController.createProject);
 router.get('/', projectController.getProjects);
 router.get('/:id', projectController.getProjectDetails);
+router.put('/:id', projectController.updateProject);
+router.delete('/:id', projectController.deleteProject);
 
 // Faculty add reviews to a project
 router.post('/:id/reviews', authorize('admin', 'faculty'), projectController.addReviewToProject);
+router.put('/:id/reviews/:reviewId', authorize('admin', 'faculty'), projectController.updateReview);
+router.delete('/:id/reviews/:reviewId', authorize('admin', 'faculty'), projectController.deleteReview);
 
 // Document upload uses multiple fields (e.g., reportFile, presentationFile)
 const cpUpload = upload.fields([
@@ -24,5 +28,9 @@ const cpUpload = upload.fields([
 router.post('/:id/reviews/:reviewId/submit', cpUpload, projectController.submitReviewDocuments);
 
 router.post('/:id/reviews/:reviewId/grade', authorize('admin', 'faculty'), projectController.gradeReview);
+
+// Document Plagiarism Check Routes
+router.post('/:id/reviews/:reviewId/plagiarism-scan', authorize('admin', 'faculty'), projectController.scanDocumentPlagiarism);
+router.get('/:id/reviews/:reviewId/plagiarism-report', authorize('admin', 'faculty'), projectController.getDocumentPlagiarismReport);
 
 module.exports = router;

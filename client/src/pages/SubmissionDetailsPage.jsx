@@ -11,8 +11,10 @@ import {
   HiOutlineCode,
   HiOutlineTerminal,
   HiOutlineDocumentText,
-  HiOutlineLink
+  HiOutlineLink,
+  HiOutlineSparkles
 } from 'react-icons/hi';
+import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
 const SubmissionDetailsPage = () => {
@@ -29,6 +31,7 @@ const SubmissionDetailsPage = () => {
   const [marks, setMarks] = useState('');
   const [manualGradeFeedback, setManualGradeFeedback] = useState('');
   const [isGrading, setIsGrading] = useState(false);
+  const [checkingWebPlagiarism, setCheckingWebPlagiarism] = useState(false);
 
   useEffect(() => {
     fetchSubmission();
@@ -44,6 +47,21 @@ const SubmissionDetailsPage = () => {
       setError(err.response?.data?.message || 'Failed to fetch submission details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWebPlagiarismCheck = async () => {
+    try {
+      setCheckingWebPlagiarism(true);
+      const res = await api.post(`/plagiarism/check-web/${id}`);
+      if (res.data.success) {
+        setSubmission(prev => ({ ...prev, aiPlagiarismReport: res.data.report }));
+        toast.success('Web plagiarism check complete');
+      }
+    } catch (err) {
+      toast.error('Failed to run web plagiarism check');
+    } finally {
+      setCheckingWebPlagiarism(false);
     }
   };
 
@@ -188,11 +206,46 @@ const SubmissionDetailsPage = () => {
                 </span>
               </li>
               {['admin', 'faculty'].includes(user.role) && submission.status === 'evaluated' && (
-                <li className="flex justify-between items-center pb-3 border-b border-slate-200/50 dark:border-slate-700/50">
-                  <span className="text-slate-500">Plagiarism Score</span>
-                  <span className={`font-bold ${submission.plagiarismScore > 30 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                    {submission.plagiarismScore}%
-                  </span>
+                <li className="flex flex-col pb-3 border-b border-slate-200/50 dark:border-slate-700/50">
+                  <div className="flex justify-between items-center w-full mb-2">
+                    <span className="text-slate-500">Plagiarism Score</span>
+                    <button 
+                      onClick={handleWebPlagiarismCheck} 
+                      disabled={checkingWebPlagiarism} 
+                      className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded flex items-center gap-1 hover:bg-indigo-200 transition-colors disabled:opacity-50"
+                    >
+                      <HiOutlineSparkles className={checkingWebPlagiarism ? 'animate-pulse' : ''} /> 
+                      {checkingWebPlagiarism ? 'Checking...' : 'AI Web Check'}
+                    </button>
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex justify-between items-center w-full">
+                      <span className="text-sm text-slate-500">Peer Comparison:</span>
+                      <span className={`font-bold ${submission.plagiarismScore > 30 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                        {submission.plagiarismScore}%
+                      </span>
+                    </div>
+                    {submission.aiPlagiarismReport && (
+                      <div className="mt-3 p-3 bg-indigo-50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100 dark:border-indigo-800 text-sm">
+                        <div className="font-bold flex items-center gap-1 text-indigo-700 dark:text-indigo-400 mb-2">
+                          <HiOutlineSparkles /> AI Web Analysis
+                        </div>
+                        <div className="space-y-1 text-slate-600 dark:text-slate-300">
+                          <div className="flex justify-between">
+                            <span>Status:</span>
+                            <span className={submission.aiPlagiarismReport.isPlagiarized ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
+                              {submission.aiPlagiarismReport.isPlagiarized ? 'Flagged' : 'Clear'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Confidence:</span>
+                            <span>{submission.aiPlagiarismReport.confidenceScore}%</span>
+                          </div>
+                          <p className="mt-2 text-xs italic opacity-80">{submission.aiPlagiarismReport.reasoning}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </li>
               )}
             </ul>

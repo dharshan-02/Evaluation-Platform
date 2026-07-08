@@ -1,6 +1,9 @@
 const Project = require('../models/Project');
 const Notification = require('../models/Notification');
+const DocumentPlagiarismReport = require('../models/DocumentPlagiarismReport');
 const { getIO } = require('../socket');
+const { scanDocument } = require('../services/webPlagiarismService');
+const path = require('path');
 
 exports.createProject = async (req, res) => {
   try {
@@ -79,8 +82,19 @@ exports.getProjectDetails = async (req, res) => {
       .populate('reviews.grading.gradedBy', 'name');
       
     if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    // Fix for old projects: Mongoose dynamically generates a default collabPin in memory if it's missing in the DB.
+    // We need to persist it to the DB so it doesn't change every time we fetch it.
+    const rawProject = await Project.findById(req.params.id).lean();
+    if (!rawProject.collabPin) {
+      await project.save();
+    }
+
     res.status(200).json({ project });
   } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(404).json({ message: 'Project not found' });
+    }
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -165,6 +179,175 @@ exports.gradeReview = async (req, res) => {
 
     res.status(200).json({ message: 'Grade submitted successfully', project });
   } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.scanDocumentPlagiarism = async (req, res) => {
+  try {
+    const { id, reviewId } = req.params;
+    const { documentType } = req.body; // 'reportFile' or 'presentationFile'
+
+    const project = await Project.findById(id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    const review = project.reviews.id(reviewId);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+
+    const fileUrl = review.submission?.[documentType];
+    if (!fileUrl) {
+      return res.status(400).json({ message: `No ${documentType} found for this review.` });
+    }
+
+    // Convert relative URL (/uploads/filename.pdf) to absolute path
+    const filePath = path.join(__dirname, '..', fileUrl);
+
+    // Call service to extract and scan
+    const reportData = await scanDocument(filePath);
+
+    // Remove old report if exists
+    await DocumentPlagiarismReport.findOneAndDelete({ project: id, reviewId, documentName: documentType });
+
+    // Save new report
+    const report = await DocumentPlagiarismReport.create({
+      project: id,
+      reviewId,
+      documentName: documentType,
+      overallSimilarity: reportData.overallSimilarity,
+      matches: reportData.matches
+    });
+
+    res.status(200).json({ success: true, message: 'Plagiarism scan completed', report });
+  } catch (error) {
+    console.error('Document scan error:', error);
+    res.status(500).json({ success: false, message: 'Failed to scan document', error: error.message });
+  }
+};
+
+exports.getDocumentPlagiarismReport = async (req, res) => {
+  try {
+    const { id, reviewId } = req.params;
+    
+    // We can fetch reports for both reportFile and presentationFile
+    const reports = await DocumentPlagiarismReport.find({ project: id, reviewId }).sort({ scannedAt: -1 });
+    
+    res.status(200).json({ success: true, reports });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+exports.updateProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, githubUrl, source } = req.body;
+    
+    const project = await Project.findById(id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    
+    // Authorization check
+    const isOwner = project.student.toString() === req.user._id.toString();
+    const isGuide = project.guide.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+    
+    if (!isOwner && !isGuide && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to edit this project' });
+    }
+    
+    // Logic check: if owner, ensure no reviews are assigned
+    if (isOwner && !isGuide && !isAdmin && project.reviews.length > 0) {
+      return res.status(403).json({ message: 'Cannot edit project after reviews have been assigned' });
+    }
+    
+    project.title = title || project.title;
+    project.description = description || project.description;
+    project.githubUrl = githubUrl || project.githubUrl;
+    project.source = source || project.source;
+    
+    await project.save();
+    res.status(200).json({ message: 'Project updated successfully', project });
+  } catch (error) {
+    if (error.name === 'CastError') return res.status(404).json({ message: 'Project not found' });
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.deleteProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const project = await Project.findById(id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    
+    const isOwner = project.student.toString() === req.user._id.toString();
+    const isGuide = project.guide.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+    
+    if (!isOwner && !isGuide && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to delete this project' });
+    }
+    
+    if (isOwner && !isGuide && !isAdmin && project.reviews.length > 0) {
+      return res.status(403).json({ message: 'Cannot delete project after reviews have been assigned' });
+    }
+    
+    await Project.findByIdAndDelete(id);
+    res.status(200).json({ message: 'Project deleted successfully' });
+  } catch (error) {
+    if (error.name === 'CastError') return res.status(404).json({ message: 'Project not found' });
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.updateReview = async (req, res) => {
+  try {
+    const { id, reviewId } = req.params;
+    const { name, dueDate, maxMarks } = req.body;
+    
+    const project = await Project.findById(id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    
+    const isGuide = project.guide.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+    
+    if (!isGuide && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to edit this review' });
+    }
+    
+    const review = project.reviews.id(reviewId);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+    
+    if (name) review.name = name;
+    if (dueDate) review.dueDate = dueDate;
+    if (maxMarks) review.maxMarks = Number(maxMarks);
+    
+    await project.save();
+    res.status(200).json({ message: 'Review updated successfully', project });
+  } catch (error) {
+    if (error.name === 'CastError') return res.status(404).json({ message: 'Not found' });
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.deleteReview = async (req, res) => {
+  try {
+    const { id, reviewId } = req.params;
+    
+    const project = await Project.findById(id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    
+    const isGuide = project.guide.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+    
+    if (!isGuide && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to delete this review' });
+    }
+    
+    project.reviews = project.reviews.filter(r => r._id.toString() !== reviewId);
+    
+    await project.save();
+    res.status(200).json({ message: 'Review deleted successfully', project });
+  } catch (error) {
+    if (error.name === 'CastError') return res.status(404).json({ message: 'Not found' });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

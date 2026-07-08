@@ -9,17 +9,22 @@ const User = require('../models/User');
  */
 const auth = async (req, res, next) => {
   try {
-    // Get token from header
+    // Get token from header or query param
+    let token;
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else if (req.query.token) {
+      token = req.query.token;
+    }
+
+    if (!token) {
       return res.status(401).json({
         success: false,
         message: 'Access denied. No token provided.',
       });
     }
-
-    const token = authHeader.split(' ')[1];
 
     if (!token) {
       return res.status(401).json({

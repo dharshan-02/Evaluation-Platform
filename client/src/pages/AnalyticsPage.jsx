@@ -156,6 +156,41 @@ const AnalyticsPage = () => {
     }
   };
 
+  // Student Progression (Score Trend)
+  const scoreTrendLabels = analytics.scoreTrend?.map(t => t._id) || [];
+  const scoreTrendData = analytics.scoreTrend?.map(t => Math.round(t.averageScore)) || [];
+
+  const progressionChartData = {
+    labels: scoreTrendLabels.length ? scoreTrendLabels : ['No Data'],
+    datasets: [
+      {
+        label: 'Avg Class Score (%)',
+        data: scoreTrendData.length ? scoreTrendData : [0],
+        borderColor: '#10b981', // emerald
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+      }
+    ]
+  };
+
+  // Hardest Assignments Bar Chart
+  const hardestLabels = analytics.hardestAssignments?.map(a => a.title.substring(0, 15) + '...') || [];
+  const hardestData = analytics.hardestAssignments?.map(a => Math.round(a.avgScore)) || [];
+
+  const hardestChartData = {
+    labels: hardestLabels.length ? hardestLabels : ['No Data'],
+    datasets: [
+      {
+        label: 'Avg Score (%)',
+        data: hardestData.length ? hardestData : [0],
+        backgroundColor: 'rgba(244, 63, 94, 0.7)', // rose
+        borderRadius: 4,
+      }
+    ]
+  };
+
   const statCards = [
     { title: 'Total Students', value: analytics.totalStudents, icon: HiOutlineUserGroup, color: 'text-sky-500', bg: 'bg-sky-500/10' },
     { title: 'Assignments', value: analytics.totalAssignments, icon: HiOutlineClipboardList, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
@@ -208,6 +243,28 @@ const AnalyticsPage = () => {
           </h3>
           <div className="h-72">
             <Bar data={barChartData} options={barChartOptions} />
+          </div>
+        </div>
+
+        {/* Student Progression Line Chart */}
+        <div className="glass rounded-2xl p-6">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-200 dark:border-slate-700/50 pb-3 flex items-center justify-between">
+            <span>Student Progression</span>
+            <span className="text-xs font-medium px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded-full">Avg Score over 14 Days</span>
+          </h3>
+          <div className="h-72">
+            <Line data={progressionChartData} options={lineChartOptions} />
+          </div>
+        </div>
+
+        {/* Hardest Assignments Bar Chart */}
+        <div className="glass rounded-2xl p-6">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-200 dark:border-slate-700/50 pb-3 flex items-center justify-between">
+            <span>Hardest Assignments</span>
+            <span className="text-xs font-medium px-2 py-1 bg-rose-500/10 text-rose-500 rounded-full">Lowest Avg Scores</span>
+          </h3>
+          <div className="h-72">
+            <Bar data={hardestChartData} options={barChartOptions} />
           </div>
         </div>
       </div>

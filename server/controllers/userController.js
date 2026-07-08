@@ -1,6 +1,8 @@
 const User = require('../models/User');
+const Submission = require('../models/Submission');
+const Project = require('../models/Project');
 const { logAction } = require('../services/auditService');
-
+const PDFDocument = require('pdfkit');
 /**
  * @route   GET /api/users
  * @desc    List all users (with filtering)
@@ -175,10 +177,123 @@ const createUser = async (req, res, next) => {
   }
 };
 
+/**
+ * @route   GET /api/users/:id/report
+ * @desc    Generate PDF Certificate & Report for a student
+ * @access  Admin, Faculty, or self
+ */
+const generateStudentReport = async (req, res, next) => {
+  try {
+    const studentId = req.params.id === 'me' ? req.user.id : req.params.id;
+
+    // Verify access permissions
+    if (req.user.role === 'student' && studentId !== req.user.id.toString()) {
+      return res.status(403).json({ success: false, message: 'You can only download your own report.' });
+    }
+
+    const student = await User.findById(studentId);
+    if (!student || student.role !== 'student') {
+      return res.status(404).json({ success: false, message: 'Student not found.' });
+    }
+
+    // Fetch student's submissions and projects
+    const submissions = await Submission.find({ student: studentId, status: 'evaluated' })
+      .populate('assignment', 'title course maxMarks');
+    const projects = await Project.find({ 'members.user': studentId })
+      .populate('reviews.grading.gradedBy', 'name');
+
+    // Create a new PDF document
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
+    // Set response headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${student.name.replace(/\s+/g, '_')}_Transcript.pdf"`);
+    
+    // Pipe the PDF directly to the response
+    doc.pipe(res);
+
+    // Header
+    doc.fontSize(24).font('Helvetica-Bold').fillColor('#4f46e5').text('D\'s VIKA EVALUATION PLATFORM', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(16).fillColor('#334155').text('Official Student Transcript', { align: 'center' });
+    doc.moveDown(2);
+
+    // Student Info
+    doc.fontSize(14).fillColor('#0f172a').text('Student Information', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12).fillColor('#475569');
+    doc.text(`Name: ${student.name}`);
+    doc.text(`Student ID: ${student.studentId || 'N/A'}`);
+    doc.text(`Department: ${student.department || 'N/A'}`);
+    doc.text(`Date of Issue: ${new Date().toLocaleDateString()}`);
+    doc.moveDown(2);
+
+    // Assignments Section
+    doc.fontSize(14).fillColor('#0f172a').text('Completed Assignments', { underline: true });
+    doc.moveDown(0.5);
+    if (submissions.length === 0) {
+      doc.fontSize(11).fillColor('#94a3b8').text('No evaluated assignments found.', { italic: true });
+    } else {
+      let totalMarks = 0;
+      let totalMaxMarks = 0;
+      submissions.forEach((sub, i) => {
+        const title = sub.assignment ? sub.assignment.title : 'Unknown Assignment';
+        const course = sub.assignment ? sub.assignment.course : 'N/A';
+        const scoreStr = `${sub.marks} / ${sub.maxMarks}`;
+        totalMarks += sub.marks;
+        totalMaxMarks += sub.maxMarks;
+
+        doc.fontSize(11).fillColor('#1e293b').font('Helvetica-Bold').text(`${i + 1}. ${title} (${course})`);
+        doc.font('Helvetica').fillColor('#64748b').text(`Score: ${scoreStr}  |  Language: ${sub.language}`);
+        doc.moveDown(0.5);
+      });
+      
+      const overallAvg = totalMaxMarks > 0 ? ((totalMarks / totalMaxMarks) * 100).toFixed(1) : 0;
+      doc.moveDown(0.5);
+      doc.fontSize(12).fillColor('#10b981').font('Helvetica-Bold').text(`Average Assignment Score: ${overallAvg}%`);
+    }
+    doc.moveDown(2);
+
+    // Projects Section
+    doc.fontSize(14).fillColor('#0f172a').font('Helvetica-Bold').text('Capstone Projects', { underline: true });
+    doc.moveDown(0.5);
+    if (projects.length === 0) {
+      doc.fontSize(11).fillColor('#94a3b8').font('Helvetica').text('No projects found.', { italic: true });
+    } else {
+      projects.forEach((proj, i) => {
+        doc.fontSize(12).fillColor('#1e293b').font('Helvetica-Bold').text(`Project: ${proj.title}`);
+        doc.font('Helvetica').fillColor('#64748b').text(`Status: ${proj.status.toUpperCase()}`);
+        doc.moveDown(0.5);
+        
+        proj.reviews.forEach(review => {
+          if (review.status === 'graded' && review.grading) {
+            doc.fontSize(11).fillColor('#334155').font('Helvetica-Oblique').text(`Review: ${review.name} - Score: ${review.grading.marks}/${review.maxMarks}`);
+            doc.fontSize(10).fillColor('#64748b').text(`Feedback: "${review.grading.feedback || 'None'}"`);
+            doc.moveDown(0.5);
+          }
+        });
+        doc.moveDown(1);
+      });
+    }
+
+    // Footer
+    doc.moveDown(4);
+    doc.fontSize(10).fillColor('#94a3b8').text('This is an automatically generated document.', { align: 'center' });
+
+    // Finalize the PDF and end the stream
+    doc.end();
+
+    await logAction(req, 'REPORT_GENERATED', `Generated PDF transcript for student: ${student.email}`, null, student._id, 'User');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   getUser,
   createUser,
   updateUser,
   deleteUser,
+  generateStudentReport,
 };

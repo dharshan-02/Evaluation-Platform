@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import api from '../lib/api';
-import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineClock, HiOutlineDocumentText, HiOutlineLink, HiOutlinePresentationChartBar, HiOutlineShieldCheck } from 'react-icons/hi';
+import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineClock, HiOutlineDocumentText, HiOutlineLink, HiOutlinePresentationChartBar, HiOutlineShieldCheck, HiOutlineVideoCamera, HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 
 const ProjectDetailsPage = () => {
   const { id } = useParams();
@@ -33,6 +34,18 @@ const ProjectDetailsPage = () => {
   const [newReviewMarks, setNewReviewMarks] = useState(100);
   const [addingReview, setAddingReview] = useState(false);
   const [showAddReview, setShowAddReview] = useState(false);
+
+  // Edit/Delete states
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
+  const [editProjectTitle, setEditProjectTitle] = useState('');
+  const [editProjectDesc, setEditProjectDesc] = useState('');
+  const [editProjectGithub, setEditProjectGithub] = useState('');
+  const [editProjectSource, setEditProjectSource] = useState('');
+
+  const [editingReview, setEditingReview] = useState(null);
+  const [editReviewName, setEditReviewName] = useState('');
+  const [editReviewDate, setEditReviewDate] = useState('');
+  const [editReviewMarks, setEditReviewMarks] = useState('');
 
   useEffect(() => {
     fetchProject();
@@ -122,6 +135,76 @@ const ProjectDetailsPage = () => {
     }
   };
 
+  const handleEditProjectClick = () => {
+    setEditProjectTitle(project.title);
+    setEditProjectDesc(project.description);
+    setEditProjectGithub(project.githubUrl || '');
+    setEditProjectSource(project.source || '');
+    setShowEditProjectModal(true);
+  };
+
+  const handleUpdateProject = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.put(`/projects/${id}`, {
+        title: editProjectTitle,
+        description: editProjectDesc,
+        githubUrl: editProjectGithub,
+        source: editProjectSource
+      });
+      setProject(res.data.project);
+      setShowEditProjectModal(false);
+      toast.success('Project updated successfully');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update project');
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
+    try {
+      await api.delete(`/projects/${id}`);
+      toast.success('Project deleted successfully');
+      navigate('/projects');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete project');
+    }
+  };
+
+  const handleEditReviewClick = (r) => {
+    setEditReviewName(r.name);
+    setEditReviewDate(r.dueDate.substring(0, 16));
+    setEditReviewMarks(r.maxMarks);
+    setEditingReview(r._id);
+  };
+
+  const handleUpdateReview = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.put(`/projects/${id}/reviews/${editingReview}`, {
+        name: editReviewName,
+        dueDate: editReviewDate,
+        maxMarks: editReviewMarks
+      });
+      setProject(res.data.project);
+      setEditingReview(null);
+      toast.success('Review updated successfully');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update review');
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm('Are you sure you want to delete this review?')) return;
+    try {
+      const res = await api.delete(`/projects/${id}/reviews/${reviewId}`);
+      setProject(res.data.project);
+      toast.success('Review deleted successfully');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete review');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[60vh]">
@@ -142,6 +225,7 @@ const ProjectDetailsPage = () => {
 
   const isStudent = user.role === 'student';
   const isFaculty = ['faculty', 'admin'].includes(user.role);
+  const canEditProject = isFaculty || (isStudent && project.reviews?.length === 0);
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -150,9 +234,21 @@ const ProjectDetailsPage = () => {
         <button onClick={() => navigate('/projects')} className="mt-1 p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
           <HiOutlineArrowLeft className="w-5 h-5" />
         </button>
-        <div>
-          <div className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">
-            Capstone Project
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">
+              Capstone Project
+            </div>
+            {canEditProject && (
+              <div className="flex items-center gap-2">
+                <button onClick={handleEditProjectClick} className="p-1.5 text-slate-500 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors" title="Edit Project">
+                  <HiOutlinePencil className="w-5 h-5" />
+                </button>
+                <button onClick={handleDeleteProject} className="p-1.5 text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors" title="Delete Project">
+                  <HiOutlineTrash className="w-5 h-5" />
+                </button>
+              </div>
+            )}
           </div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white leading-tight">
             {project.title}
@@ -194,6 +290,7 @@ const ProjectDetailsPage = () => {
           </div>
         </div>
       </div>
+
 
       {/* Reviews Timeline */}
       <div className="space-y-6">
@@ -255,6 +352,16 @@ const ProjectDetailsPage = () => {
                     {review.name}
                     {review.status === 'graded' && <HiOutlineCheckCircle className="text-emerald-500 w-5 h-5" />}
                     {isOverdue && <HiOutlineXCircle className="text-rose-500 w-5 h-5" />}
+                    {isFaculty && (
+                      <div className="flex items-center gap-1 ml-2">
+                        <button onClick={() => handleEditReviewClick(review)} className="p-1 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded transition-colors" title="Edit Review">
+                          <HiOutlinePencil className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDeleteReview(review._id)} className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded transition-colors" title="Delete Review">
+                          <HiOutlineTrash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </h3>
                   <p className="text-sm font-medium text-slate-500 flex items-center gap-1 mt-1">
                     <HiOutlineClock className="w-4 h-4" /> 
@@ -389,6 +496,69 @@ const ProjectDetailsPage = () => {
           );
         })}
       </div>
+
+      {/* Edit Project Modal */}
+      {showEditProjectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Edit Project</h3>
+            </div>
+            <form onSubmit={handleUpdateProject} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Project Title</label>
+                <input type="text" required value={editProjectTitle} onChange={e => setEditProjectTitle(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Description</label>
+                <textarea required rows={4} value={editProjectDesc} onChange={e => setEditProjectDesc(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm"></textarea>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">GitHub URL (Optional)</label>
+                <input type="url" value={editProjectGithub} onChange={e => setEditProjectGithub(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Source (Optional)</label>
+                <input type="text" value={editProjectSource} onChange={e => setEditProjectSource(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" placeholder="e.g. self-proposed" />
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <button type="button" onClick={() => setShowEditProjectModal(false)} className="px-4 py-2 font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl transition-colors">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Review Modal */}
+      {editingReview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Edit Review Schedule</h3>
+            </div>
+            <form onSubmit={handleUpdateReview} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Review Name</label>
+                <input type="text" required value={editReviewName} onChange={e => setEditReviewName(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Due Date</label>
+                <input type="datetime-local" required value={editReviewDate} onChange={e => setEditReviewDate(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Max Marks</label>
+                <input type="number" required min="1" value={editReviewMarks} onChange={e => setEditReviewMarks(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" />
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <button type="button" onClick={() => setEditingReview(null)} className="px-4 py-2 font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl transition-colors">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

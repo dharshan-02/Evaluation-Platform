@@ -4,6 +4,7 @@ const PlagiarismReport = require('../models/PlagiarismReport');
 const Notification = require('../models/Notification');
 const socket = require('../socket');
 const { compareSubmissions, compareAllSubmissions } = require('../services/plagiarismService');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 /**
  * @route   POST /api/plagiarism/check/:assignmentId
@@ -167,4 +168,66 @@ const getAssignmentReports = async (req, res, next) => {
   }
 };
 
-module.exports = { checkPlagiarism, getReport, getAssignmentReports };
+/**
+ * @route   POST /api/plagiarism/check-web/:submissionId
+ * @desc    Run an AI-powered web plagiarism check on a specific submission
+ * @access  Faculty, Admin
+ */
+const checkWebPlagiarism = async (req, res, next) => {
+  try {
+    const submission = await Submission.findById(req.params.submissionId).populate('student');
+    if (!submission) return res.status(404).json({ success: false, message: 'Submission not found' });
+
+    const code = submission.files.map(f => f.content).join('\n');
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ success: false, message: 'Gemini API key missing for web plagiarism check.' });
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const prompt = `
+Analyze the following code for plagiarism against known online sources, open-source repositories, or common tutorials. 
+Identify any highly suspicious identical matches.
+
+Code:
+\`\`\`
+${code}
+\`\`\`
+
+Respond strictly in JSON format (do not use markdown blocks):
+{
+  "isPlagiarized": boolean,
+  "confidenceScore": number (0-100),
+  "sources": ["string", "string"],
+  "reasoning": "string"
+}
+`;
+
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text();
+    responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    let aiReport;
+    try {
+      aiReport = JSON.parse(responseText);
+    } catch (e) {
+      aiReport = {
+        isPlagiarized: false,
+        confidenceScore: 0,
+        sources: [],
+        reasoning: "Failed to parse AI response: " + responseText
+      };
+    }
+
+    // Save to the submission (assuming we add aiPlagiarismReport to the schema later)
+    submission.aiPlagiarismReport = aiReport;
+    await submission.save();
+
+    res.json({ success: true, report: aiReport });
+  } catch (error) {
+    console.error('Web Plagiarism Check Error:', error);
+    next(error);
+  }
+};
+
+module.exports = { checkPlagiarism, getReport, getAssignmentReports, checkWebPlagiarism };

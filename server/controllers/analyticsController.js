@@ -74,6 +74,53 @@ const getOverview = async (req, res, next) => {
       },
     ]);
 
+    // Average Score Progression Trend (Last 14 days)
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+    const scoreTrend = await Submission.aggregate([
+      { $match: { status: 'evaluated', marks: { $exists: true }, maxMarks: { $gt: 0 }, submittedAt: { $gte: fourteenDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$submittedAt' } },
+          averageScore: { $avg: { $multiply: [{ $divide: ['$marks', '$maxMarks'] }, 100] } }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Hardest Assignments (Lowest average score)
+    const hardestAssignments = await Submission.aggregate([
+      { $match: { status: 'evaluated', marks: { $exists: true }, maxMarks: { $gt: 0 } } },
+      {
+        $group: {
+          _id: '$assignment',
+          avgScore: { $avg: { $multiply: [{ $divide: ['$marks', '$maxMarks'] }, 100] } },
+          totalSubmissions: { $sum: 1 }
+        }
+      },
+      // Filter out assignments with very few submissions to avoid noise
+      { $match: { totalSubmissions: { $gte: 1 } } },
+      { $sort: { avgScore: 1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: 'assignments',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'assignmentDoc'
+        }
+      },
+      { $unwind: '$assignmentDoc' },
+      {
+        $project: {
+          title: '$assignmentDoc.title',
+          avgScore: { $round: ['$avgScore', 2] },
+          totalSubmissions: 1
+        }
+      }
+    ]);
+
     res.json({
       success: true,
       analytics: {
@@ -87,6 +134,8 @@ const getOverview = async (req, res, next) => {
         plagiarismFlags,
         submissionTrend,
         scoreDistribution,
+        scoreTrend,
+        hardestAssignments,
       },
     });
   } catch (error) {
