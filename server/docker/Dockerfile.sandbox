@@ -1,0 +1,29 @@
+# Neo-Vika Sandbox — Minimal Docker image for code execution
+# Supports: C, C++, Python, Java, JavaScript (Node.js)
+FROM ubuntu:22.04
+
+# Avoid interactive prompts during build
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install compilers and runtimes
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      gcc \
+      g++ \
+      python3 \
+      openjdk-17-jdk-headless \
+      nodejs \
+      && apt-get clean \
+      && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for sandbox execution
+RUN useradd -m -s /bin/bash sandbox
+
+# Set working directory
+WORKDIR /code
+
+# Switch to non-root user
+USER sandbox
+
+# Default command (overridden at runtime)
+CMD ["echo", "Neo-Vika Sandbox Ready"]
