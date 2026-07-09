@@ -17,7 +17,7 @@ module.exports = {
   init: (httpServer) => {
     io = new Server(httpServer, {
       cors: {
-        origin: ['http://localhost:5173', 'http://localhost:3000'],
+        origin: ['http://localhost:5173', 'http://localhost:3000', 'https://d-evaluation-platform-teal.vercel.app'],
         methods: ['GET', 'POST'],
         credentials: true
       }
