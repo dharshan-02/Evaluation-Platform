@@ -169,7 +169,8 @@ const createUser = async (req, res, next) => {
         role: user.role,
         department: user.department,
         studentId: user.studentId,
-        isActive: user.isActive
+        isActive: user.isActive,
+        createdAt: user.createdAt
       }
     });
   } catch (error) {

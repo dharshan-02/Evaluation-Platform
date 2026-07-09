@@ -199,7 +199,7 @@ const UsersPage = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {format(new Date(u.createdAt), 'MMM dd, yyyy')}
+                      {u.createdAt ? format(new Date(u.createdAt), 'MMM dd, yyyy') : 'Just now'}
                     </td>
                     <td className="px-6 py-4">
                       <button 
