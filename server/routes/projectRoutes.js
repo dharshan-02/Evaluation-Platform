@@ -11,6 +11,9 @@ router.use(auth);
 // Students create projects
 router.post('/', authorize('student'), projectController.createProject);
 router.get('/', projectController.getProjects);
+// Global plagiarism report route
+router.get('/plagiarism/all-reports', authorize('admin', 'faculty'), projectController.getAllDocumentPlagiarismReports);
+
 router.get('/:id', projectController.getProjectDetails);
 router.put('/:id', projectController.updateProject);
 router.delete('/:id', projectController.deleteProject);

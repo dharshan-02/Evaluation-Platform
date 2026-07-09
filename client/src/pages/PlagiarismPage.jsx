@@ -21,9 +21,26 @@ const PlagiarismPage = () => {
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState(null);
 
+  // New states for Tabs and Project Reports
+  const [activeTab, setActiveTab] = useState('assignments'); // 'assignments' or 'projects'
+  const [projectReports, setProjectReports] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
   useEffect(() => {
     fetchAssignments();
+    fetchProjectReports();
   }, []);
+
+  const fetchProjectReports = async () => {
+    try {
+      setLoadingProjects(true);
+      const res = await api.get('/projects/plagiarism/all-reports');
+      setProjectReports(res.data.reports || []);
+    } catch (err) {
+      console.error('Failed to load project reports', err);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
 
   const fetchAssignments = async () => {
     try {
@@ -85,10 +102,35 @@ const PlagiarismPage = () => {
           Plagiarism Detection
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Identify code similarities across student submissions using Winnowing algorithms.
+          Review plagiarism reports for Assignment Submissions and Project Documents.
         </p>
       </div>
 
+      {/* Tabs */}
+      <div className="flex space-x-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit">
+        <button
+          onClick={() => setActiveTab('assignments')}
+          className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+            activeTab === 'assignments'
+              ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
+          }`}
+        >
+          Assignment Submissions
+        </button>
+        <button
+          onClick={() => setActiveTab('projects')}
+          className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+            activeTab === 'projects'
+              ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
+          }`}
+        >
+          Project Documents
+        </button>
+      </div>
+
+      {activeTab === 'assignments' ? (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Assignment Selection */}
         <div className="glass rounded-2xl p-6 h-[fit-content]">
@@ -218,6 +260,64 @@ const PlagiarismPage = () => {
           )}
         </div>
       </div>
+      ) : (
+      /* Project Documents Tab */
+      <div className="glass rounded-2xl p-6 min-h-[400px]">
+        <div className="border-b border-slate-200 dark:border-slate-700/50 pb-4 mb-6">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Project Document Scans</h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Recent plagiarism checks performed on student project reports and presentations.
+          </p>
+        </div>
+
+        {loadingProjects ? (
+          <div className="flex justify-center py-20">
+            <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
+          </div>
+        ) : projectReports.length === 0 ? (
+          <div className="text-center py-10 text-slate-500">
+            <HiOutlineCheckCircle className="w-12 h-12 mx-auto mb-3 text-emerald-500/50" />
+            <p>No project document plagiarism reports found.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {projectReports.map(report => (
+              <div key={report._id} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-col gap-4">
+                
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-slate-900 dark:text-white">{report.project?.title || 'Unknown Project'}</h3>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Student: <span className="font-semibold text-slate-700 dark:text-slate-300">{report.project?.student?.name || 'Unknown'}</span>
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-semibold text-slate-500 uppercase">Similarity</div>
+                    <div className={`text-2xl font-bold ${
+                      report.overallSimilarity >= 30 ? 'text-rose-500' : 'text-emerald-500'
+                    }`}>
+                      {report.overallSimilarity}%
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center pt-3 border-t border-slate-200 dark:border-slate-700">
+                  <span className="text-xs font-semibold px-2 py-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-md">
+                    {report.documentName === 'reportFile' ? 'Project Report' : 'Presentation'}
+                  </span>
+                  
+                  {report.matches && report.matches.length > 0 && (
+                    <div className="text-xs text-rose-500 font-semibold bg-rose-100 dark:bg-rose-900/30 px-2 py-1 rounded-md">
+                      {report.matches.length} matches found
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      )}
     </div>
   );
 };

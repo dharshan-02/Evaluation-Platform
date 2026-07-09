@@ -365,3 +365,22 @@ exports.deleteReview = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+exports.getAllDocumentPlagiarismReports = async (req, res) => {
+  try {
+    const reports = await DocumentPlagiarismReport.find()
+      .populate({
+        path: 'project',
+        select: 'title student',
+        populate: {
+          path: 'student',
+          select: 'name email'
+        }
+      })
+      .sort({ scannedAt: -1 });
+    
+    res.status(200).json({ success: true, reports });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
