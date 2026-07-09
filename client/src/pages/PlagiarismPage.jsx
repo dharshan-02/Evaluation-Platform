@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import api from '../lib/api';
+import api, { getBaseUrl } from '../lib/api';
 import { 
   HiOutlineDocumentDuplicate,
   HiOutlinePlay,
   HiOutlineEye,
   HiOutlineExclamationCircle,
-  HiOutlineCheckCircle
+  HiOutlineCheckCircle,
+  HiOutlineDownload
 } from 'react-icons/hi';
 
 const PlagiarismPage = () => {
@@ -40,6 +41,10 @@ const PlagiarismPage = () => {
     } finally {
       setLoadingProjects(false);
     }
+  };
+
+  const downloadPlagiarismReport = (reportId) => {
+    window.open(`${getBaseUrl()}/api/projects/plagiarism/download/${reportId}`, '_blank');
   };
 
   const fetchAssignments = async () => {
@@ -292,11 +297,20 @@ const PlagiarismPage = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-semibold text-slate-500 uppercase">Similarity</div>
-                    <div className={`text-2xl font-bold ${
-                      report.overallSimilarity >= 30 ? 'text-rose-500' : 'text-emerald-500'
-                    }`}>
-                      {report.overallSimilarity}%
+                    <div className="text-xs font-semibold text-slate-500 uppercase mb-1">Similarity</div>
+                    <div className="flex items-center justify-end gap-3">
+                      <div className={`text-2xl font-bold ${
+                        report.overallSimilarity >= 30 ? 'text-rose-500' : 'text-emerald-500'
+                      }`}>
+                        {report.overallSimilarity}%
+                      </div>
+                      <button 
+                        onClick={() => downloadPlagiarismReport(report._id)} 
+                        className="p-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                        title="Download PDF Report"
+                      >
+                        <HiOutlineDownload className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
                 </div>

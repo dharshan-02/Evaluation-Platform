@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import api, { getBaseUrl } from '../lib/api';
-import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineClock, HiOutlineDocumentText, HiOutlineLink, HiOutlinePresentationChartBar, HiOutlineShieldCheck, HiOutlineVideoCamera, HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineClock, HiOutlineDocumentText, HiOutlineLink, HiOutlinePresentationChartBar, HiOutlineShieldCheck, HiOutlineVideoCamera, HiOutlinePencil, HiOutlineTrash, HiOutlineDownload } from 'react-icons/hi';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
@@ -60,12 +60,33 @@ const ProjectDetailsPage = () => {
       setLoading(true);
       const res = await api.get(`/projects/${id}`);
       setProject(res.data.project);
+      
+      if (res.data.project && res.data.project.reviews) {
+        const reportsMap = {};
+        for (const review of res.data.project.reviews) {
+          try {
+            const reportRes = await api.get(`/projects/${id}/reviews/${review._id}/plagiarism-report`);
+            if (reportRes.data.success && reportRes.data.reports) {
+              reportRes.data.reports.forEach(report => {
+                reportsMap[`${review._id}-${report.documentName}`] = report;
+              });
+            }
+          } catch (e) {
+            console.error('Failed to load reports for review', review._id, e);
+          }
+        }
+        setPlagiarismReports(reportsMap);
+      }
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || 'Failed to fetch project details');
     } finally {
       setLoading(false);
     }
+  };
+
+  const downloadPlagiarismReport = (reportId) => {
+    window.open(`${getBaseUrl()}/api/projects/plagiarism/download/${reportId}`, '_blank');
   };
 
   const handleStudentSubmit = async (e, reviewId) => {
@@ -445,21 +466,81 @@ const ProjectDetailsPage = () => {
                             {checkingPlagiarism[`${review._id}-reportFile`] ? 'Checking...' : 'Check Plagiarism'}
                           </button>
                           {plagiarismReports[`${review._id}-reportFile`] && (
-                            <div className="text-xs p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">
-                              <span className="font-bold text-slate-700 dark:text-slate-300">Similarity: </span>
-                              <span className={plagiarismReports[`${review._id}-reportFile`].overallSimilarity > 20 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
-                                {plagiarismReports[`${review._id}-reportFile`].overallSimilarity}%
-                              </span>
+                            <div className="text-xs p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                              <div>
+                                <span className="font-bold text-slate-700 dark:text-slate-300">Similarity: </span>
+                                <span className={plagiarismReports[`${review._id}-reportFile`].overallSimilarity > 20 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
+                                  {plagiarismReports[`${review._id}-reportFile`].overallSimilarity}%
+                                </span>
+                              </div>
+                              <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-reportFile`]._id)} className="p-1 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded" title="Download Report PDF">
+                                <HiOutlineDownload className="w-4 h-4" />
+                              </button>
                             </div>
                           )}
+                        </div>
+                      )}
+                      {/* For Students, only show the score and download button if available */}
+                      {!isFaculty && plagiarismReports[`${review._id}-reportFile`] && (
+                        <div className="text-xs p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 mt-2 flex justify-between items-center">
+                          <div>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">Similarity: </span>
+                            <span className={plagiarismReports[`${review._id}-reportFile`].overallSimilarity > 20 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
+                              {plagiarismReports[`${review._id}-reportFile`].overallSimilarity}%
+                            </span>
+                          </div>
+                          <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-reportFile`]._id)} className="flex items-center gap-1 text-indigo-500 hover:underline">
+                            <HiOutlineDownload className="w-3 h-3" /> Download
+                          </button>
                         </div>
                       )}
                     </div>
                   )}
                   {review.submission.presentationFile && (
-                    <a href={`${getBaseUrl()}${review.submission.presentationFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-500 hover:underline text-sm font-medium">
-                      <HiOutlinePresentationChartBar className="w-5 h-5" /> Presentation
-                    </a>
+                    <div className="flex flex-col gap-2">
+                      <a href={`${getBaseUrl()}${review.submission.presentationFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-500 hover:underline text-sm font-medium">
+                        <HiOutlinePresentationChartBar className="w-5 h-5" /> Presentation
+                      </a>
+                      {isFaculty && (
+                        <div className="flex flex-col gap-2">
+                          <button 
+                            onClick={() => handleCheckPlagiarism(review._id, 'presentationFile')}
+                            disabled={checkingPlagiarism[`${review._id}-presentationFile`]}
+                            className="flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wide bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 py-1 px-2 rounded w-fit transition-colors disabled:opacity-50"
+                          >
+                            <HiOutlineShieldCheck className="w-3 h-3" /> 
+                            {checkingPlagiarism[`${review._id}-presentationFile`] ? 'Checking...' : 'Check Plagiarism'}
+                          </button>
+                          {plagiarismReports[`${review._id}-presentationFile`] && (
+                            <div className="text-xs p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                              <div>
+                                <span className="font-bold text-slate-700 dark:text-slate-300">Similarity: </span>
+                                <span className={plagiarismReports[`${review._id}-presentationFile`].overallSimilarity > 20 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
+                                  {plagiarismReports[`${review._id}-presentationFile`].overallSimilarity}%
+                                </span>
+                              </div>
+                              <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-presentationFile`]._id)} className="p-1 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded" title="Download Report PDF">
+                                <HiOutlineDownload className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {/* For Students, only show the score and download button if available */}
+                      {!isFaculty && plagiarismReports[`${review._id}-presentationFile`] && (
+                        <div className="text-xs p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 mt-2 flex justify-between items-center">
+                          <div>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">Similarity: </span>
+                            <span className={plagiarismReports[`${review._id}-presentationFile`].overallSimilarity > 20 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
+                              {plagiarismReports[`${review._id}-presentationFile`].overallSimilarity}%
+                            </span>
+                          </div>
+                          <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-presentationFile`]._id)} className="flex items-center gap-1 text-indigo-500 hover:underline">
+                            <HiOutlineDownload className="w-3 h-3" /> Download
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

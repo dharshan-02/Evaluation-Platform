@@ -13,6 +13,7 @@ router.post('/', authorize('student'), projectController.createProject);
 router.get('/', projectController.getProjects);
 // Global plagiarism report route
 router.get('/plagiarism/all-reports', authorize('admin', 'faculty'), projectController.getAllDocumentPlagiarismReports);
+router.get('/plagiarism/download/:reportId', projectController.downloadDocumentPlagiarismReport);
 
 router.get('/:id', projectController.getProjectDetails);
 router.put('/:id', projectController.updateProject);
@@ -34,6 +35,6 @@ router.post('/:id/reviews/:reviewId/grade', authorize('admin', 'faculty'), proje
 
 // Document Plagiarism Check Routes
 router.post('/:id/reviews/:reviewId/plagiarism-scan', authorize('admin', 'faculty'), projectController.scanDocumentPlagiarism);
-router.get('/:id/reviews/:reviewId/plagiarism-report', authorize('admin', 'faculty'), projectController.getDocumentPlagiarismReport);
+router.get('/:id/reviews/:reviewId/plagiarism-report', projectController.getDocumentPlagiarismReport);
 
 module.exports = router;

@@ -4,6 +4,7 @@ const DocumentPlagiarismReport = require('../models/DocumentPlagiarismReport');
 const { getIO } = require('../socket');
 const { scanDocument } = require('../services/webPlagiarismService');
 const path = require('path');
+const PDFDocument = require('pdfkit');
 
 exports.createProject = async (req, res) => {
   try {
@@ -381,6 +382,80 @@ exports.getAllDocumentPlagiarismReports = async (req, res) => {
     
     res.status(200).json({ success: true, reports });
   } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+exports.downloadDocumentPlagiarismReport = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    
+    const report = await DocumentPlagiarismReport.findById(reportId).populate({
+      path: 'project',
+      select: 'title student',
+      populate: {
+        path: 'student',
+        select: 'name email'
+      }
+    });
+
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Report not found.' });
+    }
+
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=project_plagiarism_${report._id}.pdf`);
+    doc.pipe(res);
+
+    // Header
+    doc.rect(0, 0, doc.page.width, 100).fill('#0f172a');
+    doc.fillColor('#ffffff').fontSize(24).font('Helvetica-Bold').text('Plagiarism Scan Report', 50, 40);
+    doc.fontSize(12).font('Helvetica').text('Student Project Evaluation Hub', 50, 70);
+
+    doc.moveDown(4);
+
+    // Overview
+    doc.fillColor('#0f172a').fontSize(14).font('Helvetica-Bold').text('Scan Overview');
+    doc.moveDown(0.5);
+    doc.fontSize(12).font('Helvetica');
+    doc.text(`Project Title: ${report.project?.title || 'N/A'}`);
+    doc.text(`Student: ${report.project?.student?.name || 'N/A'} (${report.project?.student?.email || 'N/A'})`);
+    doc.text(`Document Type: ${report.documentName === 'reportFile' ? 'Project Report' : 'Presentation'}`);
+    doc.text(`Date Scanned: ${new Date(report.scannedAt).toLocaleString()}`);
+    
+    doc.moveDown(1);
+    
+    // Similarity Score
+    const simColor = report.overallSimilarity >= 30 ? '#f43f5e' : '#10b981';
+    doc.fillColor(simColor).fontSize(20).font('Helvetica-Bold')
+      .text(`${report.overallSimilarity}% Overall Similarity`);
+    doc.moveDown(1);
+    
+    // Matches Section
+    doc.fillColor('#0f172a').fontSize(14).font('Helvetica-Bold').text('Web Matches');
+    doc.moveDown(0.5);
+    
+    if (!report.matches || report.matches.length === 0) {
+      doc.fontSize(12).font('Helvetica-Oblique').text('No web matches found. The document appears original.');
+    } else {
+      report.matches.forEach((match, index) => {
+        // Prevent page break in the middle of a match if possible
+        if (doc.y > doc.page.height - 150) {
+          doc.addPage();
+        }
+        
+        doc.fillColor('#0f172a').fontSize(12).font('Helvetica-Bold').text(`Match ${index + 1}:`);
+        doc.fillColor('#334155').fontSize(11).font('Helvetica-Oblique').text(`"${match.textSnippet}"`);
+        doc.fillColor('#3b82f6').fontSize(10).font('Helvetica').text(match.sourceUrl, { link: match.sourceUrl, underline: true });
+        doc.moveDown(0.8);
+      });
+    }
+
+    doc.end();
+  } catch (error) {
+    console.error('PDF Generation Error:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
