@@ -185,9 +185,17 @@ const getMe = async (req, res, next) => {
         department: user.department,
         studentId: user.studentId,
         avatar: user.avatar,
+        githubUrl: user.githubUrl,
+        linkedinUrl: user.linkedinUrl,
+        portfolioUrl: user.portfolioUrl,
         isActive: user.isActive,
         lastLogin: user.lastLogin,
         createdAt: user.createdAt,
+        points: user.points,
+        badges: user.badges,
+        currentStreak: user.currentStreak,
+        longestStreak: user.longestStreak,
+        activityDates: user.activityDates,
       },
     });
   } catch (error) {
@@ -202,13 +210,21 @@ const getMe = async (req, res, next) => {
  */
 const updateProfile = async (req, res, next) => {
   try {
-    const { name, department, studentId, avatar } = req.body;
+    const { name, department, studentId, githubUrl, linkedinUrl, portfolioUrl } = req.body;
 
     const updateData = {};
     if (name) updateData.name = name;
     if (department) updateData.department = department;
     if (studentId) updateData.studentId = studentId;
-    if (avatar !== undefined) updateData.avatar = avatar;
+    if (githubUrl !== undefined) updateData.githubUrl = githubUrl;
+    if (linkedinUrl !== undefined) updateData.linkedinUrl = linkedinUrl;
+    if (portfolioUrl !== undefined) updateData.portfolioUrl = portfolioUrl;
+    
+    if (req.file) {
+      // Create a URL path that the client can use to fetch the image
+      // Assuming server runs on port 5000 and serves /uploads
+      updateData.avatar = `http://localhost:5000/uploads/${req.file.filename}`;
+    }
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -234,6 +250,9 @@ const updateProfile = async (req, res, next) => {
         department: user.department,
         studentId: user.studentId,
         avatar: user.avatar,
+        githubUrl: user.githubUrl,
+        linkedinUrl: user.linkedinUrl,
+        portfolioUrl: user.portfolioUrl,
       },
     });
   } catch (error) {

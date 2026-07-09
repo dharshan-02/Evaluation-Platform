@@ -26,10 +26,14 @@ const fileFilter = (req, file, cb) => {
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.ms-powerpoint',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp'
   ];
 
-  const allowedExts = ['.zip', '.pdf', '.doc', '.docx', '.ppt', '.pptx'];
+  const allowedExts = ['.zip', '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.jpg', '.jpeg', '.png', '.gif', '.webp'];
   const ext = path.extname(file.originalname).toLowerCase();
 
   if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {

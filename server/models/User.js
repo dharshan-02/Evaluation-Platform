@@ -50,6 +50,21 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    githubUrl: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    linkedinUrl: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    portfolioUrl: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     isActive: {
       type: Boolean,
       default: true,

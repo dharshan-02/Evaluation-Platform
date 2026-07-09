@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { useAuth } from '../hooks/useAuth';
