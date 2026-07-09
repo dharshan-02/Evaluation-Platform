@@ -39,6 +39,10 @@ exports.addReviewToProject = async (req, res) => {
       return res.status(403).json({ message: 'You are not the guide for this project' });
     }
     
+    if (project.reviews.length >= 4) {
+      return res.status(400).json({ message: 'Maximum of 4 reviews can be allocated for each project' });
+    }
+
     project.reviews.push({
       name,
       dueDate,
@@ -87,7 +91,7 @@ exports.getProjectDetails = async (req, res) => {
     // We need to persist it to the DB so it doesn't change every time we fetch it.
     const rawProject = await Project.findById(req.params.id).lean();
     if (!rawProject.collabPin) {
-      await project.save();
+      await Project.updateOne({ _id: project._id }, { $set: { collabPin: project.collabPin } });
     }
 
     res.status(200).json({ project });
@@ -145,7 +149,7 @@ exports.submitReviewDocuments = async (req, res) => {
 exports.gradeReview = async (req, res) => {
   try {
     const { id, reviewId } = req.params;
-    const { marks, feedback } = req.body;
+    const { marks, feedback, isVerified } = req.body;
     
     const project = await Project.findById(id);
     if (!project) return res.status(404).json({ message: 'Project not found' });
@@ -156,6 +160,7 @@ exports.gradeReview = async (req, res) => {
     review.grading = {
       marks: Number(marks),
       feedback,
+      isVerified: Boolean(isVerified),
       gradedBy: req.user._id,
       gradedAt: new Date()
     };

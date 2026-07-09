@@ -146,12 +146,13 @@ const createUser = async (req, res, next) => {
   try {
     const { name, email, password, role, department, studentId } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const emailLower = email.toLowerCase();
+    const existingUser = await User.findOne({ email: emailLower });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered.' });
     }
 
-    const userData = { name, email, password, role };
+    const userData = { name, email: emailLower, password, role };
     if (department) userData.department = department;
     if (role === 'student' && studentId) userData.studentId = studentId;
 

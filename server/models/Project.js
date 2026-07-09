@@ -30,7 +30,8 @@ const reviewSchema = new mongoose.Schema({
     marks: Number,
     feedback: String,
     gradedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    gradedAt: Date
+    gradedAt: Date,
+    isVerified: { type: Boolean, default: false }
   }
 });
 

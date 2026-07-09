@@ -47,6 +47,10 @@ const ProjectDetailsPage = () => {
   const [editReviewDate, setEditReviewDate] = useState('');
   const [editReviewMarks, setEditReviewMarks] = useState('');
 
+  // Plagiarism state
+  const [plagiarismReports, setPlagiarismReports] = useState({});
+  const [checkingPlagiarism, setCheckingPlagiarism] = useState({});
+
   useEffect(() => {
     fetchProject();
   }, [id]);
@@ -73,8 +77,9 @@ const ProjectDetailsPage = () => {
       if (githubUrl) formData.append('githubUrl', githubUrl);
       if (reportFile) formData.append('reportFile', reportFile);
       if (presentationFile) formData.append('presentationFile', presentationFile);
-      
-      const res = await api.post(`/projects/${id}/reviews/${reviewId}/submit`, formData);
+      const res = await api.post(`/projects/${id}/reviews/${reviewId}/submit`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       setProject(res.data.project);
       setActiveReviewId(null);
       
@@ -90,6 +95,8 @@ const ProjectDetailsPage = () => {
     }
   };
 
+  const [isVerified, setIsVerified] = useState(false);
+
   const handleFacultyGrade = async (e, reviewId) => {
     e.preventDefault();
     setGrading(true);
@@ -97,7 +104,8 @@ const ProjectDetailsPage = () => {
     try {
       const res = await api.post(`/projects/${id}/reviews/${reviewId}/grade`, {
         marks,
-        feedback
+        feedback,
+        isVerified
       });
       setProject(res.data.project);
       setGradingReviewId(null);
@@ -105,11 +113,33 @@ const ProjectDetailsPage = () => {
       // Reset fields
       setMarks('');
       setFeedback('');
+      setIsVerified(false);
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || 'Failed to submit grade');
     } finally {
       setGrading(false);
+    }
+  };
+
+  const handleCheckPlagiarism = async (reviewId, documentType) => {
+    setCheckingPlagiarism(prev => ({ ...prev, [`${reviewId}-${documentType}`]: true }));
+    try {
+      const res = await api.post(`/projects/${id}/reviews/${reviewId}/plagiarism-scan`, {
+        documentType
+      });
+      if (res.data.success) {
+        toast.success('Plagiarism check completed');
+        setPlagiarismReports(prev => ({
+          ...prev,
+          [`${reviewId}-${documentType}`]: res.data.report
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to check plagiarism');
+    } finally {
+      setCheckingPlagiarism(prev => ({ ...prev, [`${reviewId}-${documentType}`]: false }));
     }
   };
 
@@ -296,7 +326,7 @@ const ProjectDetailsPage = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Review Schedule</h2>
-          {isFaculty && (
+          {isFaculty && project.reviews.length < 4 && (
             <button
               onClick={() => setShowAddReview(!showAddReview)}
               className="px-4 py-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
@@ -383,6 +413,11 @@ const ProjectDetailsPage = () => {
                       {review.grading?.marks} <span className="text-sm text-slate-500">/ {review.maxMarks}</span>
                     </div>
                   )}
+                  {review.status === 'graded' && review.grading?.isVerified && (
+                    <div className="mt-1 inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-xs font-bold uppercase">
+                      <HiOutlineShieldCheck className="w-3 h-3" /> Verified
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -400,12 +435,24 @@ const ProjectDetailsPage = () => {
                         <HiOutlineDocumentText className="w-5 h-5" /> Project Report
                       </a>
                       {isFaculty && (
-                        <button 
-                          onClick={() => alert('Initiating Plagiarism Check on Report...')}
-                          className="flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wide bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 py-1 px-2 rounded w-fit transition-colors"
-                        >
-                          <HiOutlineShieldCheck className="w-3 h-3" /> Check Plagiarism
-                        </button>
+                        <div className="flex flex-col gap-2">
+                          <button 
+                            onClick={() => handleCheckPlagiarism(review._id, 'reportFile')}
+                            disabled={checkingPlagiarism[`${review._id}-reportFile`]}
+                            className="flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wide bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 py-1 px-2 rounded w-fit transition-colors disabled:opacity-50"
+                          >
+                            <HiOutlineShieldCheck className="w-3 h-3" /> 
+                            {checkingPlagiarism[`${review._id}-reportFile`] ? 'Checking...' : 'Check Plagiarism'}
+                          </button>
+                          {plagiarismReports[`${review._id}-reportFile`] && (
+                            <div className="text-xs p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">
+                              <span className="font-bold text-slate-700 dark:text-slate-300">Similarity: </span>
+                              <span className={plagiarismReports[`${review._id}-reportFile`].overallSimilarity > 20 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
+                                {plagiarismReports[`${review._id}-reportFile`].overallSimilarity}%
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}
@@ -479,6 +526,18 @@ const ProjectDetailsPage = () => {
                     <input type="number" required min="0" max={review.maxMarks} value={marks} onChange={e => setMarks(e.target.value)} className="input-field w-full md:w-1/3 px-3 py-2 rounded-lg text-sm outline-none" />
                   </div>
                   
+                  <div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={isVerified}
+                        onChange={(e) => setIsVerified(e.target.checked)}
+                        className="w-4 h-4 text-indigo-600 bg-slate-100 border-slate-300 rounded focus:ring-indigo-500 focus:ring-2"
+                      />
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Mark Documents as Verified</span>
+                    </label>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-semibold mb-1 text-slate-700 dark:text-slate-300">Feedback</label>
                     <textarea rows="3" value={feedback} onChange={e => setFeedback(e.target.value)} className="input-field w-full px-3 py-2 rounded-lg text-sm outline-none resize-y" placeholder="Provide constructive feedback..."></textarea>
