@@ -85,8 +85,23 @@ const ProjectDetailsPage = () => {
     }
   };
 
-  const downloadPlagiarismReport = (reportId) => {
-    window.open(`${getBaseUrl()}/api/projects/plagiarism/download/${reportId}`, '_blank');
+  const downloadPlagiarismReport = async (reportId) => {
+    try {
+      toast.loading('Generating PDF...', { id: 'pdf-download' });
+      const response = await api.get(`/projects/plagiarism/download/${reportId}`, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `project_plagiarism_${reportId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Download complete', { id: 'pdf-download' });
+    } catch (err) {
+      console.error('Failed to download PDF', err);
+      toast.error('Failed to download PDF', { id: 'pdf-download' });
+    }
   };
 
   const handleStudentSubmit = async (e, reviewId) => {

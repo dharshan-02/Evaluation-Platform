@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import api, { getBaseUrl } from '../lib/api';
+import toast from 'react-hot-toast';
 import { 
   HiOutlineDocumentDuplicate,
   HiOutlinePlay,
@@ -43,8 +44,24 @@ const PlagiarismPage = () => {
     }
   };
 
-  const downloadPlagiarismReport = (reportId) => {
-    window.open(`${getBaseUrl()}/api/projects/plagiarism/download/${reportId}`, '_blank');
+  const downloadPlagiarismReport = async (reportId) => {
+    try {
+      const toastId = toast ? toast.loading('Generating PDF...') : null;
+      const response = await api.get(`/projects/plagiarism/download/${reportId}`, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `project_plagiarism_${reportId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      if (toastId) toast.success('Download complete', { id: toastId });
+    } catch (err) {
+      console.error('Failed to download PDF', err);
+      if (toast) toast.error('Failed to download PDF');
+      else alert('Failed to download PDF');
+    }
   };
 
   const fetchAssignments = async () => {
