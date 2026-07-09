@@ -207,6 +207,15 @@ exports.scanDocumentPlagiarism = async (req, res) => {
     // Convert relative URL (/uploads/filename.pdf) to absolute path
     const filePath = path.join(__dirname, '..', fileUrl);
 
+    // Check if file exists on disk (important for ephemeral deployments like Render)
+    const fs = require('fs');
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Document file not found on the server. It may have been lost during a server redeployment. Please ask the student to re-upload the document.' 
+      });
+    }
+
     // Call service to extract and scan
     const reportData = await scanDocument(filePath);
 
