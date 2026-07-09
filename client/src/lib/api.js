@@ -15,6 +15,11 @@ const api = axios.create({
   },
 });
 
+export const getBaseUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  return apiUrl ? apiUrl.replace(/\/api$/, '') : 'http://localhost:5000';
+};
+
 // Request interceptor — attach JWT token
 api.interceptors.request.use(
   (config) => {

@@ -13,7 +13,7 @@ import {
 } from 'react-icons/hi';
 import { useAuth } from '../hooks/useAuth';
 import { useSocket } from '../hooks/useSocket';
-import api from '../lib/api';
+import api, { getBaseUrl } from '../lib/api';
 
 // Stagger animation for cards
 const containerVariants = {
@@ -75,7 +75,7 @@ const StatsCard = ({ icon: Icon, label, value, gradient, accentColor }) => (
 const StudentDashboard = ({ data }) => {
   const handleDownloadTranscript = () => {
     // Open the PDF download endpoint in a new tab or trigger download
-    window.open(`http://localhost:5000/api/users/me/report?token=${localStorage.getItem('token')}`, '_blank');
+    window.open(`${getBaseUrl()}/api/users/me/report?token=${localStorage.getItem('token')}`, '_blank');
   };
 
   return (

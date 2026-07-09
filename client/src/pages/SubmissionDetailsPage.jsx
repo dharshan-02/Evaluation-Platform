@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { useAuth } from '../hooks/useAuth';
-import api from '../lib/api';
+import api, { getBaseUrl } from '../lib/api';
 import { 
   HiOutlineArrowLeft,
   HiOutlineCheckCircle,
@@ -280,7 +280,7 @@ const SubmissionDetailsPage = () => {
                       <span className="font-semibold text-sm">Project Report</span>
                     </div>
                     {submission.projectReport ? (
-                      <a href={`http://localhost:5000${submission.projectReport}`} target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline font-medium">
+                      <a href={`${getBaseUrl()}${submission.projectReport}`} target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline font-medium">
                         View/Download Document
                       </a>
                     ) : (

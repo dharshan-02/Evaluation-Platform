@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import api from '../lib/api';
+import api, { getBaseUrl } from '../lib/api';
 import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineClock, HiOutlineDocumentText, HiOutlineLink, HiOutlinePresentationChartBar, HiOutlineShieldCheck, HiOutlineVideoCamera, HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -396,7 +396,7 @@ const ProjectDetailsPage = () => {
                   )}
                   {review.submission.reportFile && (
                     <div className="flex flex-col gap-2">
-                      <a href={`http://localhost:5000${review.submission.reportFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-500 hover:underline text-sm font-medium">
+                      <a href={`${getBaseUrl()}${review.submission.reportFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-500 hover:underline text-sm font-medium">
                         <HiOutlineDocumentText className="w-5 h-5" /> Project Report
                       </a>
                       {isFaculty && (
@@ -410,7 +410,7 @@ const ProjectDetailsPage = () => {
                     </div>
                   )}
                   {review.submission.presentationFile && (
-                    <a href={`http://localhost:5000${review.submission.presentationFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-500 hover:underline text-sm font-medium">
+                    <a href={`${getBaseUrl()}${review.submission.presentationFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-500 hover:underline text-sm font-medium">
                       <HiOutlinePresentationChartBar className="w-5 h-5" /> Presentation
                     </a>
                   )}
