@@ -119,7 +119,7 @@ function App() {
                 className="text-transparent bg-clip-text font-black text-4xl"
                 style={{ backgroundImage: 'var(--gradient-brand)' }}
               >
-                DV
+                D
               </motion.span>
             </div>
           </motion.div>
@@ -132,7 +132,7 @@ function App() {
               transition={{ duration: 1, delay: 0.8, ease: "easeOut" }}
               className="text-3xl font-black tracking-tight text-slate-900"
             >
-              D's VIKA
+              D's
             </motion.h1>
             <motion.p
               initial={{ y: 20, opacity: 0 }}

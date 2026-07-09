@@ -144,10 +144,10 @@ const DashboardLayout = () => {
                 className="flex items-center gap-3 overflow-hidden whitespace-nowrap"
               >
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg" style={{ background: 'var(--gradient-brand)', boxShadow: '0 4px 14px -4px var(--color-brand)' }}>
-                  <span className="text-white font-bold text-sm">DV</span>
+                  <span className="text-white font-bold text-sm">D</span>
                 </div>
                 <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors">
-                  D's VIKA
+                  D's
                 </span>
               </motion.div>
             )}

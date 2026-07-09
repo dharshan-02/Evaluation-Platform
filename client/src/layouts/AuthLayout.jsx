@@ -38,8 +38,8 @@ const AuthLayout = () => {
               transition={{ type: 'spring', stiffness: 300 }}
             >
               <div className="absolute inset-[2px] bg-white rounded-[22px] flex items-center justify-center">
-                <span className="text-2xl font-black bg-clip-text text-transparent" style={{ backgroundImage: 'var(--gradient-brand)' }}>
-                  DV
+                <span className="text-3xl font-black bg-clip-text text-transparent" style={{ backgroundImage: 'var(--gradient-brand)' }}>
+                  D
                 </span>
               </div>
             </motion.div>
@@ -47,7 +47,7 @@ const AuthLayout = () => {
               className="text-4xl font-black tracking-tight text-transparent bg-clip-text"
               style={{ backgroundImage: 'var(--gradient-brand)' }}
             >
-              D's VIKA
+              D's
             </h1>
             <p className="text-sm mt-3 font-semibold text-slate-500 uppercase tracking-widest">
               Evaluation Platform
