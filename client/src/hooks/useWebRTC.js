@@ -26,6 +26,14 @@ export const useWebRTC = (socket, projectId, user) => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setLocalStream(stream);
       setIsMediaActive(true);
+      
+      // Add new tracks to all existing peer connections
+      Object.values(peersRef.current).forEach(pc => {
+        stream.getTracks().forEach(track => {
+          pc.addTrack(track, stream);
+        });
+      });
+      
       return stream;
     } catch (err) {
       console.error('Error accessing media devices:', err);
@@ -36,7 +44,14 @@ export const useWebRTC = (socket, projectId, user) => {
 
   const stopMedia = () => {
     if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
+      localStream.getTracks().forEach(track => {
+        track.stop();
+        // Remove tracks from all existing peer connections
+        Object.values(peersRef.current).forEach(pc => {
+          const sender = pc.getSenders().find(s => s.track === track);
+          if (sender) pc.removeTrack(sender);
+        });
+      });
       setLocalStream(null);
       setIsMediaActive(false);
       setIsVideoEnabled(true);
@@ -85,6 +100,23 @@ export const useWebRTC = (socket, projectId, user) => {
       }
     };
 
+    // Handle Renegotiation automatically when tracks are added/removed
+    peerConnection.onnegotiationneeded = async () => {
+      try {
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        if (socket && user) {
+          socket.emit('webrtc-offer', {
+            to: peerSocketId,
+            offer,
+            userName: user.name
+          });
+        }
+      } catch (err) {
+        console.error('Error during renegotiation:', err);
+      }
+    };
+
     // Handle receiving tracks from the remote peer
     peerConnection.ontrack = (event) => {
       setRemoteStreams(prev => ({
@@ -110,7 +142,7 @@ export const useWebRTC = (socket, projectId, user) => {
 
     peersRef.current[peerSocketId] = peerConnection;
     return peerConnection;
-  }, [socket]);
+  }, [socket, user]);
 
   useEffect(() => {
     if (!socket || !user) return;
@@ -136,12 +168,23 @@ export const useWebRTC = (socket, projectId, user) => {
     });
 
     // 3. We received an offer from someone who was already in the room when we joined
+    // OR a renegotiation offer because someone turned their camera on
     socket.on('webrtc-offer', async ({ from, userName, offer }) => {
       console.log('Received WebRTC offer from:', userName);
       
-      const pc = createPeerConnection(from, userName, localStream);
+      let pc = peersRef.current[from];
+      if (!pc) {
+        pc = createPeerConnection(from, userName, localStream);
+      }
       
       try {
+        // If the peer connection is in a state where it shouldn't accept an offer, log it
+        if (pc.signalingState !== 'stable') {
+          console.warn('Received offer but signalingState is', pc.signalingState);
+          // Standard Perfect Negotiation handles collision, but for simplicity here
+          // we assume our peer topology is mostly stable. 
+        }
+
         await pc.setRemoteDescription(new RTCSessionDescription(offer));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
