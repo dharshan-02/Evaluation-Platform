@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const pdfParse = require('pdf-parse');
 const officeParser = require('officeparser');
 
 /**
@@ -10,16 +9,14 @@ const extractTextFromFile = async (filePath) => {
   const ext = path.extname(filePath).toLowerCase();
 
   try {
-    if (ext === '.pdf') {
-      const dataBuffer = fs.readFileSync(filePath);
-      const data = await pdfParse(dataBuffer);
-      return data.text;
-    } else if (ext === '.pptx' || ext === '.docx' || ext === '.ppt' || ext === '.doc') {
-      const text = await officeParser.parseOfficeAsync(filePath);
-      return text;
-    } else {
+    const allowedExts = ['.pdf', '.pptx', '.docx', '.ppt', '.doc'];
+    if (!allowedExts.includes(ext)) {
       throw new Error(`Unsupported file type: ${ext}. Only PDF, PPTX, and DOCX are supported.`);
     }
+
+    // officeparser natively supports extracting text from pdf, docx, pptx, etc.
+    const result = await officeParser.parseOffice(filePath);
+    return result.toText();
   } catch (error) {
     console.error(`Error extracting text from ${filePath}:`, error);
     throw new Error('Failed to extract text from document.');
