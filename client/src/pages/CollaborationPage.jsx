@@ -8,7 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useSocket } from '../hooks/useSocket';
 import { useWebRTC } from '../hooks/useWebRTC';
 import api from '../lib/api';
-import AITutorWidget from '../components/AITutorWidget';
+
 import ReactMarkdown from 'react-markdown';
 import {
   HiOutlineSparkles,
@@ -1264,7 +1264,6 @@ const CollaborationPage = () => {
         )}
       </AnimatePresence>
 
-      <AITutorWidget />
     </div>
   );
 };

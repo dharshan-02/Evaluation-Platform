@@ -17,7 +17,7 @@ import {
   HiOutlineCode
 } from 'react-icons/hi';
 import toast from 'react-hot-toast';
-import AITutorWidget from '../components/AITutorWidget';
+
 import ReactMarkdown from 'react-markdown';
 
 const DEFAULT_CODE = {
@@ -514,7 +514,6 @@ const PlaygroundPage = () => {
       )}
     </AnimatePresence>
 
-      <AITutorWidget />
     </div>
   );
 };
