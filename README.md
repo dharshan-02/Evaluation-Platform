@@ -187,7 +187,7 @@ Modern UI built using
 
 Features
 
-- 🌙 Dark Mode
+
 - 📱 Fully Responsive
 - 💎 Glassmorphism
 - ✨ Smooth Animations
