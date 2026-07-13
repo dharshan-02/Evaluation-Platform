@@ -75,6 +75,18 @@ Project Evaluation/
 
 ---
 
+## 🔑 Demo Credentials
+
+Use these credentials to explore the different roles in the application:
+
+| Role | Email | Password |
+|------|-------|----------|
+| **Admin** | `admin@eval.hub` | `Admin@123` |
+| **Faculty** | `faculty@eval.hub` | `Faculty@123` |
+| **Student** | `student@eval.hub` | `Student@123` |
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
