@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
  */
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 30000,
+  timeout: 120000, // Increased to 2 minutes for long-running AI operations
   headers: {
     'Content-Type': 'application/json',
   },
