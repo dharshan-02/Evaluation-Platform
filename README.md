@@ -357,28 +357,6 @@ The system automatically generates
 
 ---
 
-# 📸 Screenshots
-
-> Add screenshots here
-
-```
-Home Page
-
-Faculty Dashboard
-
-Student Dashboard
-
-Assignment Page
-
-Evaluation Results
-
-Plagiarism Report
-
-Analytics Dashboard
-```
-
----
-
 # 📌 Future Enhancements
 
 - 🤖 AI-based Code Review
