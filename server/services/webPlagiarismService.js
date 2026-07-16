@@ -38,8 +38,7 @@ const performRealWebSearch = async (text) => {
   const truncatedText = text.length > 30000 ? text.substring(0, 30000) : text;
 
   if (!process.env.GEMINI_API_KEY) {
-    console.error('GEMINI_API_KEY is missing. Returning 0% similarity.');
-    return { overallSimilarity: 0, matches: [] };
+    throw new Error('GEMINI_API_KEY environment variable is missing on the server. Please add it to your hosting dashboard.');
   }
 
   try {
@@ -83,8 +82,8 @@ If no plagiarism is detected against published literature, return overallSimilar
     };
   } catch (error) {
     console.error('Error during AI academic plagiarism check:', error);
-    // Fallback to 0 if API fails
-    return { overallSimilarity: 0, matches: [] };
+    // Throw the error so the controller can send it to the frontend
+    throw new Error('AI Plagiarism Check Failed: ' + (error.message || 'Unknown error'));
   }
 };
 
