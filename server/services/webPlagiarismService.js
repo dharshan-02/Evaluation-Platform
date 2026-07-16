@@ -23,94 +23,69 @@ const extractTextFromFile = async (filePath) => {
   }
 };
 
-const axios = require('axios');
-const cheerio = require('cheerio');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 /**
- * Searches the web for exact phrases using DuckDuckGo HTML
- */
-const searchWebForExactMatch = async (sentence) => {
-  try {
-    const res = await axios.get('https://html.duckduckgo.com/html/', {
-      params: { q: `"${sentence}"` },
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5'
-      },
-      timeout: 5000
-    });
-    
-    const $ = cheerio.load(res.data);
-    const resultUrl = $('.result__snippet').first().parent().find('.result__url').text().trim();
-    
-    if (resultUrl && resultUrl !== '') {
-      let url = resultUrl;
-      if (!url.startsWith('http')) {
-        url = 'https://' + url.replace(/ /g, '');
-      }
-      return url;
-    }
-  } catch (error) {
-    // Ignore rate limits or errors, just return null (no match)
-  }
-  return null;
-};
-
-/**
- * Real Web Plagiarism Engine
+ * Real Web/Academic Plagiarism Engine using Gemini
  */
 const performRealWebSearch = async (text) => {
   if (!text || text.trim() === '') {
     return { overallSimilarity: 0, matches: [] };
   }
 
-  // Split text into sentences
-  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-  
-  // Filter for substantive sentences (between 40 and 150 chars to avoid generic phrases)
-  let cleanedSentences = sentences
-    .map(s => s.trim().replace(/\n/g, ' '))
-    .filter(s => s.length >= 40 && s.length <= 150);
-    
-  // If there are too many sentences, just check a random sample to avoid massive rate limits
-  if (cleanedSentences.length > 10) {
-    cleanedSentences = cleanedSentences.sort(() => 0.5 - Math.random()).slice(0, 10);
-  } else if (cleanedSentences.length === 0) {
+  // To prevent token limits on huge documents, we'll slice to the first ~30000 characters
+  // which is roughly 6000-8000 words (more than enough to detect plagiarism)
+  const truncatedText = text.length > 30000 ? text.substring(0, 30000) : text;
+
+  if (!process.env.GEMINI_API_KEY) {
+    console.error('GEMINI_API_KEY is missing. Returning 0% similarity.');
     return { overallSimilarity: 0, matches: [] };
   }
 
-  const matches = [];
-  let plagiarizedSentencesCount = 0;
-
-  console.log(`Checking ${cleanedSentences.length} sentences for plagiarism...`);
-
-  // Check sentences sequentially to be polite to the search engine
-  for (const sentence of cleanedSentences) {
-    // Add artificial delay to prevent rate limits
-    await new Promise(resolve => setTimeout(resolve, 1500));
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
-    const sourceUrl = await searchWebForExactMatch(sentence);
-    if (sourceUrl) {
-      plagiarizedSentencesCount++;
-      const similarityScore = Math.floor(Math.random() * 10) + 90; // 90% to 99% match for exact phrases
-      
-      matches.push({
-        textSnippet: sentence,
-        sourceUrl,
-        similarityScore
-      });
+    const prompt = `
+You are an academic integrity and plagiarism detection AI.
+Analyze the following extracted document text and determine if any significant portions are plagiarized from known published research papers, academic journals, books, or reputable online reports.
+
+Document Text:
+"""
+${truncatedText}
+"""
+
+Respond STRICTLY in the following JSON format (no markdown blocks, just raw JSON):
+{
+  "overallSimilarity": number (0 to 100 representing the estimated percentage of the document that is plagiarized),
+  "matches": [
+    {
+      "textSnippet": "The specific sentence or paragraph from the document that is plagiarized",
+      "sourceUrl": "Name of the published journal, research paper title, DOI, or URL where this was likely copied from",
+      "similarityScore": number (0 to 100 representing the similarity of this specific snippet)
     }
+  ]
+}
+
+If no plagiarism is detected against published literature, return overallSimilarity: 0 and an empty matches array.
+`;
+
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text();
+    // Clean up potential markdown formatting
+    responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    const parsedData = JSON.parse(responseText);
+    
+    return {
+      overallSimilarity: parsedData.overallSimilarity || 0,
+      matches: parsedData.matches || []
+    };
+  } catch (error) {
+    console.error('Error during AI academic plagiarism check:', error);
+    // Fallback to 0 if API fails
+    return { overallSimilarity: 0, matches: [] };
   }
-
-  const overallSimilarity = cleanedSentences.length > 0 
-    ? Math.round((plagiarizedSentencesCount / cleanedSentences.length) * 100)
-    : 0;
-
-  return {
-    overallSimilarity,
-    matches
-  };
 };
 
 /**

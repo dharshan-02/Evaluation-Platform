@@ -215,7 +215,7 @@ const SubmissionDetailsPage = () => {
                       className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded flex items-center gap-1 hover:bg-indigo-200 transition-colors disabled:opacity-50"
                     >
                       <HiOutlineSparkles className={checkingWebPlagiarism ? 'animate-pulse' : ''} /> 
-                      {checkingWebPlagiarism ? 'Checking...' : 'AI Web Check'}
+                      {checkingWebPlagiarism ? 'Checking...' : 'Detect AI Code'}
                     </button>
                   </div>
                   <div className="flex flex-col">
@@ -228,7 +228,7 @@ const SubmissionDetailsPage = () => {
                     {submission.aiPlagiarismReport && (
                       <div className="mt-3 p-3 bg-indigo-50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100 dark:border-indigo-800 text-sm">
                         <div className="font-bold flex items-center gap-1 text-indigo-700 dark:text-indigo-400 mb-2">
-                          <HiOutlineSparkles /> AI Web Analysis
+                          <HiOutlineSparkles /> AI Generation Analysis
                         </div>
                         <div className="space-y-1 text-slate-600 dark:text-slate-300">
                           <div className="flex justify-between">
