@@ -33,48 +33,67 @@ const performRealWebSearch = async (text) => {
     return { overallSimilarity: 0, matches: [] };
   }
 
-  // To prevent token limits on huge documents, we'll slice to the first ~30000 characters
-  // which is roughly 6000-8000 words (more than enough to detect plagiarism)
-  const truncatedText = text.length > 30000 ? text.substring(0, 30000) : text;
+  // To prevent token limits and ensure focused search queries, limit to ~15000 chars
+  const truncatedText = text.length > 15000 ? text.substring(0, 15000) : text;
 
   if (!process.env.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY environment variable is missing on the server. Please add it to your hosting dashboard.');
+    throw new Error('GEMINI_API_KEY environment variable is missing on the server.');
   }
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // Enable Google Search Grounding to actually query the web
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.5-flash',
+      tools: [{ googleSearch: {} }]
+    });
     
     const prompt = `
-You are an academic integrity and plagiarism detection AI.
-Analyze the following extracted document text and determine if any significant portions are plagiarized from known published research papers, academic journals, books, or reputable online reports.
+You are a highly strict academic integrity and plagiarism detection AI with access to Google Search.
+You MUST search the web to check if the following document text contains verbatim or slightly modified paragraphs from the internet, published papers, GitHub, or articles.
 
 Document Text:
 """
 ${truncatedText}
 """
 
-Respond STRICTLY in the following JSON format (no markdown blocks, just raw JSON):
+Instructions:
+1. Actually utilize your Google Search capability to verify exact phrases or concepts from the text above.
+2. Be aggressive in flagging anything that strongly matches web results.
+3. If the text is a common template, boilerplate, or well-known public tutorial, flag it and provide the source URL.
+
+Respond STRICTLY in the following JSON format (no markdown blocks, just raw JSON). Do NOT include any text outside the JSON object:
 {
-  "overallSimilarity": number (0 to 100 representing the estimated percentage of the document that is plagiarized),
+  "overallSimilarity": number (0 to 100, representing the estimated percentage of plagiarized content. Do NOT be afraid to return high numbers like 80 or 100 if it exists online),
   "matches": [
     {
       "textSnippet": "The specific sentence or paragraph from the document that is plagiarized",
-      "sourceUrl": "Name of the published journal, research paper title, DOI, or URL where this was likely copied from",
+      "sourceUrl": "The exact URL or source where this was found on the web",
       "similarityScore": number (0 to 100 representing the similarity of this specific snippet)
     }
   ]
 }
-
-If no plagiarism is detected against published literature, return overallSimilarity: 0 and an empty matches array.
 `;
 
     const result = await model.generateContent(prompt);
     let responseText = result.response.text();
+    
     // Clean up potential markdown formatting
     responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-
-    const parsedData = JSON.parse(responseText);
+    
+    // Fallback parser in case Gemini adds extra conversational text
+    let parsedData;
+    try {
+      parsedData = JSON.parse(responseText);
+    } catch (parseError) {
+      // Try to extract JSON if it's embedded in text
+      const match = responseText.match(/\{[\s\S]*\}/);
+      if (match) {
+        parsedData = JSON.parse(match[0]);
+      } else {
+        throw new Error("Could not parse AI response into JSON");
+      }
+    }
     
     return {
       overallSimilarity: parsedData.overallSimilarity || 0,
@@ -82,7 +101,6 @@ If no plagiarism is detected against published literature, return overallSimilar
     };
   } catch (error) {
     console.error('Error during AI academic plagiarism check:', error);
-    // Throw the error so the controller can send it to the frontend
     throw new Error('AI Plagiarism Check Failed: ' + (error.message || 'Unknown error'));
   }
 };
