@@ -75,7 +75,18 @@ Respond STRICTLY in the following JSON format (no markdown blocks, just raw JSON
 }
 `;
 
-    const result = await model.generateContent(prompt);
+    let result;
+    try {
+      // First attempt: with Google Search Grounding
+      result = await model.generateContent(prompt);
+    } catch (apiError) {
+      console.warn('Google Search Grounding failed, falling back to standard AI check:', apiError.message);
+      
+      // Fallback attempt: without search grounding
+      const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      result = await fallbackModel.generateContent(prompt);
+    }
+    
     let responseText = result.response.text();
     
     // Clean up potential markdown formatting
@@ -95,9 +106,19 @@ Respond STRICTLY in the following JSON format (no markdown blocks, just raw JSON
       }
     }
     
+    // Sanitize data to prevent Mongoose validation errors
+    const overallSimilarity = Number(parsedData.overallSimilarity) || 0;
+    const rawMatches = Array.isArray(parsedData.matches) ? parsedData.matches : [];
+    
+    const matches = rawMatches.map(match => ({
+      textSnippet: String(match.textSnippet || 'Plagiarized snippet detected but not provided by AI.'),
+      sourceUrl: String(match.sourceUrl || 'Source URL not provided by AI search engine.'),
+      similarityScore: Number(match.similarityScore) || overallSimilarity || 50
+    }));
+    
     return {
-      overallSimilarity: parsedData.overallSimilarity || 0,
-      matches: parsedData.matches || []
+      overallSimilarity: overallSimilarity,
+      matches: matches
     };
   } catch (error) {
     console.error('Error during AI academic plagiarism check:', error);
