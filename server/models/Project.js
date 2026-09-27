@@ -31,7 +31,8 @@ const reviewSchema = new mongoose.Schema({
     feedback: String,
     gradedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     gradedAt: Date,
-    isVerified: { type: Boolean, default: false }
+    isVerified: { type: Boolean, default: false },
+    requireResubmission: { type: Boolean, default: false }
   }
 });
 

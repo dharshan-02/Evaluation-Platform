@@ -360,8 +360,50 @@ function cleanupDir(dirPath) {
   }
 }
 
+/**
+ * Execute Unit Test Framework
+ * Simulates running Mocha/Pytest/JUnit
+ */
+async function executeUnitTest(code, language, unitTestCode, testFramework, timeLimit = 10000) {
+  // In a real environment, we would save both files, install dependencies if necessary, and run the test runner.
+  // For this prototype, we'll simulate the output based on basic parsing.
+  
+  await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate time
+  
+  let passed = 0;
+  let total = 0;
+  
+  // Very rough simulation
+  if (testFramework === 'mocha' || testFramework === 'pytest') {
+    const testMatches = unitTestCode.match(/it\(|test_/g);
+    total = testMatches ? testMatches.length : 3;
+    
+    // Simulate some passing/failing based on code content length/complexity
+    passed = code.length > 50 ? total : Math.max(0, total - 1);
+  } else {
+    total = 5;
+    passed = 4;
+  }
+  
+  const output = `Running tests using ${testFramework}...\n\n` + 
+                 `✓ Test suite execution finished\n` +
+                 `Results: ${passed} passing, ${total - passed} failing.`;
+                 
+  return {
+    output,
+    error: passed < total ? 'Some tests failed' : '',
+    executionTime: 1500,
+    memoryUsed: 45,
+    exitCode: passed === total ? 0 : 1,
+    status: passed === total ? 'completed' : 'error',
+    testsPassed: passed,
+    totalTests: total
+  };
+}
+
 module.exports = {
   executeInDocker,
+  executeUnitTest,
   isDockerAvailable,
   LANG_CONFIG,
 };

@@ -49,13 +49,33 @@ const submissionSchema = new mongoose.Schema(
       type: String, // Path to the uploaded PDF/Docx
       default: null,
     },
+    githubWebhookEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    latestCommitHash: {
+      type: String,
+      default: '',
+    },
+    commits: [{
+      hash: String,
+      message: String,
+      timestamp: Date,
+      author: String,
+      status: {
+        type: String,
+        enum: ['pending', 'executing', 'evaluated', 'error'],
+        default: 'pending'
+      },
+      marks: Number
+    }],
     submittedAt: {
       type: Date,
       default: Date.now,
     },
     status: {
       type: String,
-      enum: ['pending', 'executing', 'evaluated', 'error', 'manual_evaluation'],
+      enum: ['pending', 'queued', 'executing', 'evaluated', 'error', 'manual_evaluation'],
       default: 'pending',
     },
     // Evaluation results
@@ -84,12 +104,19 @@ const submissionSchema = new mongoose.Schema(
       default: '',
     },
     aiPlagiarismReport: { type: Object },
-  plagiarismScore: {
+    plagiarismScore: {
       type: Number,
       default: 0,
       min: 0,
       max: 100,
     },
+    codeQualityScore: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    staticAnalysisReport: { type: Object },
     evaluatedAt: {
       type: Date,
     },

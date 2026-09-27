@@ -73,14 +73,14 @@ const NotificationsPage = () => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-12">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <HiOutlineBell className="w-6 h-6 text-indigo-500" />
+          <h1 className="text-3xl font-black text-[var(--color-text-primary)] flex items-center gap-3 tracking-tight">
+            <HiOutlineBell className="w-8 h-8 text-indigo-500" />
             Notifications
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm font-medium text-[var(--color-text-secondary)] mt-2">
             Stay updated on assignment deadlines, plagiarism alerts, and evaluation results.
           </p>
         </div>
@@ -88,7 +88,7 @@ const NotificationsPage = () => {
         {unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest text-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors"
           >
             <HiOutlineCheck className="w-4 h-4" />
             Mark all read
@@ -96,7 +96,7 @@ const NotificationsPage = () => {
         )}
       </div>
 
-      <div className="glass rounded-2xl overflow-hidden">
+      <div className="glass-panel overflow-hidden shadow-xs">
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
@@ -106,13 +106,13 @@ const NotificationsPage = () => {
             <p>{error}</p>
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-12 text-center text-slate-500">
+          <div className="p-12 text-center text-[var(--color-text-secondary)]">
             <HiOutlineBell className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">No notifications yet</h3>
+            <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">No notifications yet</h3>
             <p className="text-sm">You're all caught up!</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-200 dark:divide-slate-700/50">
+          <div className="divide-y divide-[var(--color-border)]">
             <AnimatePresence>
               {notifications.map(notification => (
                 <motion.div
@@ -120,10 +120,10 @@ const NotificationsPage = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, height: 0 }}
-                  className={`p-4 flex gap-4 cursor-pointer transition-colors ${
+                  className={`p-5 flex gap-4 cursor-pointer transition-colors ${
                     notification.isRead 
-                      ? 'bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30' 
-                      : 'bg-indigo-50/50 dark:bg-indigo-900/10 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
+                      ? 'bg-transparent hover:bg-[var(--color-bg-hover)]' 
+                      : 'bg-indigo-500/5 hover:bg-indigo-500/10'
                   }`}
                   onClick={() => markAsRead(notification._id, notification.link)}
                 >
@@ -137,14 +137,14 @@ const NotificationsPage = () => {
                   
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-1">
-                      <h4 className={`text-sm font-bold ${notification.isRead ? 'text-slate-700 dark:text-slate-300' : 'text-slate-900 dark:text-white'}`}>
+                      <h4 className={`text-sm font-bold ${notification.isRead ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-text-primary)]'}`}>
                         {notification.title}
                       </h4>
-                      <span className="text-xs text-slate-400 whitespace-nowrap ml-4">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] whitespace-nowrap ml-4">
                         {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                       </span>
                     </div>
-                    <p className={`text-sm ${notification.isRead ? 'text-slate-500' : 'text-slate-600 dark:text-slate-300'}`}>
+                    <p className={`text-sm font-medium ${notification.isRead ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-secondary)]'}`}>
                       {notification.message}
                     </p>
                   </div>

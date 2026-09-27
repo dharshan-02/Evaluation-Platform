@@ -86,6 +86,15 @@ const assignmentSchema = new mongoose.Schema(
       min: 0,
       max: 100,
     },
+    // Unit Testing
+    unitTestCode: {
+      type: String, // E.g., Mocha/Chai JS code or PyTest code
+    },
+    testFramework: {
+      type: String,
+      enum: ['mocha', 'pytest', 'junit', 'gtest', 'none'],
+      default: 'none',
+    },
   },
   {
     timestamps: true,

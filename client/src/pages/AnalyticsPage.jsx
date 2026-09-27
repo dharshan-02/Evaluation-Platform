@@ -62,10 +62,10 @@ const AnalyticsPage = () => {
 
   if (['student'].includes(user?.role)) {
     return (
-      <div className="glass p-8 text-center text-rose-500 rounded-2xl max-w-2xl mx-auto mt-10">
+      <div className="glass-panel p-8 text-center text-rose-500 max-w-2xl mx-auto mt-10 animate-fade-in">
         <HiOutlineExclamationCircle className="w-12 h-12 mx-auto mb-4" />
-        <h2 className="text-xl font-bold">Access Denied</h2>
-        <p>You do not have permission to view this page.</p>
+        <h2 className="text-xl font-bold tracking-tight">Access Denied</h2>
+        <p className="mt-2 text-rose-500/80 font-medium">You do not have permission to view this page.</p>
       </div>
     );
   }
@@ -80,10 +80,10 @@ const AnalyticsPage = () => {
 
   if (error || !analytics) {
     return (
-      <div className="glass p-8 text-center text-rose-500 rounded-2xl max-w-2xl mx-auto mt-10">
+      <div className="glass-panel p-8 text-center text-rose-500 max-w-2xl mx-auto mt-10 animate-fade-in">
         <HiOutlineExclamationCircle className="w-12 h-12 mx-auto mb-4" />
-        <h2 className="text-xl font-bold">Error</h2>
-        <p>{error || 'Failed to load analytics.'}</p>
+        <h2 className="text-xl font-bold tracking-tight">Error</h2>
+        <p className="mt-2 text-rose-500/80 font-medium">{error || 'Failed to load analytics.'}</p>
       </div>
     );
   }
@@ -199,13 +199,13 @@ const AnalyticsPage = () => {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-8 animate-fade-in pb-12">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <HiOutlineTrendingUp className="w-6 h-6 text-indigo-500" />
+        <h1 className="text-3xl font-black text-[var(--color-text-primary)] flex items-center gap-3 tracking-tight">
+          <HiOutlineTrendingUp className="w-8 h-8 text-indigo-500" />
           Analytics Dashboard
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm font-medium text-[var(--color-text-secondary)] mt-2">
           System overview and performance metrics across all courses.
         </p>
       </div>
@@ -213,13 +213,13 @@ const AnalyticsPage = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, idx) => (
-          <div key={idx} className="glass rounded-2xl p-6 flex items-center gap-4 hover:-translate-y-1 transition-transform">
-            <div className={`p-4 rounded-xl ${stat.bg} ${stat.color}`}>
-              <stat.icon className="w-8 h-8" />
+          <div key={idx} className="glass-panel p-6 flex items-center gap-4 hover:-translate-y-1 transition-transform shadow-sm hover:shadow-md cursor-default">
+            <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} shadow-inner`}>
+              <stat.icon className="w-7 h-7" />
             </div>
             <div>
-              <div className="text-sm font-semibold text-slate-500 dark:text-slate-400">{stat.title}</div>
-              <div className="text-2xl font-bold text-slate-900 dark:text-white">{stat.value}</div>
+              <div className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest">{stat.title}</div>
+              <div className="text-3xl font-black text-[var(--color-text-primary)] tracking-tight">{stat.value}</div>
             </div>
           </div>
         ))}
@@ -227,8 +227,8 @@ const AnalyticsPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Trend Line Chart */}
-        <div className="glass rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-200 dark:border-slate-700/50 pb-3">
+        <div className="glass-panel p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-6 border-b border-[var(--color-border)] pb-3">
             Submissions (Last 7 Days)
           </h3>
           <div className="h-72">
@@ -237,8 +237,8 @@ const AnalyticsPage = () => {
         </div>
 
         {/* Score Distribution Bar Chart */}
-        <div className="glass rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-200 dark:border-slate-700/50 pb-3">
+        <div className="glass-panel p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-6 border-b border-[var(--color-border)] pb-3">
             Score Distribution (Evaluated)
           </h3>
           <div className="h-72">
@@ -247,10 +247,10 @@ const AnalyticsPage = () => {
         </div>
 
         {/* Student Progression Line Chart */}
-        <div className="glass rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-200 dark:border-slate-700/50 pb-3 flex items-center justify-between">
+        <div className="glass-panel p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-6 border-b border-[var(--color-border)] pb-3 flex items-center justify-between">
             <span>Student Progression</span>
-            <span className="text-xs font-medium px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded-full">Avg Score over 14 Days</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded border border-emerald-500/20">Avg Score over 14 Days</span>
           </h3>
           <div className="h-72">
             <Line data={progressionChartData} options={lineChartOptions} />
@@ -258,10 +258,10 @@ const AnalyticsPage = () => {
         </div>
 
         {/* Hardest Assignments Bar Chart */}
-        <div className="glass rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-200 dark:border-slate-700/50 pb-3 flex items-center justify-between">
+        <div className="glass-panel p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-6 border-b border-[var(--color-border)] pb-3 flex items-center justify-between">
             <span>Hardest Assignments</span>
-            <span className="text-xs font-medium px-2 py-1 bg-rose-500/10 text-rose-500 rounded-full">Lowest Avg Scores</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-rose-500/10 text-rose-500 rounded border border-rose-500/20">Lowest Avg Scores</span>
           </h3>
           <div className="h-72">
             <Bar data={hardestChartData} options={barChartOptions} />

@@ -132,6 +132,7 @@ const ProjectDetailsPage = () => {
   };
 
   const [isVerified, setIsVerified] = useState(false);
+  const [requireResubmission, setRequireResubmission] = useState(false);
 
   const handleFacultyGrade = async (e, reviewId) => {
     e.preventDefault();
@@ -141,7 +142,8 @@ const ProjectDetailsPage = () => {
       const res = await api.post(`/projects/${id}/reviews/${reviewId}/grade`, {
         marks,
         feedback,
-        isVerified
+        isVerified,
+        requireResubmission
       });
       setProject(res.data.project);
       setGradingReviewId(null);
@@ -150,6 +152,7 @@ const ProjectDetailsPage = () => {
       setMarks('');
       setFeedback('');
       setIsVerified(false);
+      setRequireResubmission(false);
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || 'Failed to submit grade');
@@ -274,17 +277,20 @@ const ProjectDetailsPage = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[60vh]">
-        <div className="w-10 h-10 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+        <div className="animate-pulse-subtle flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-[var(--color-border)] border-t-[var(--color-text-primary)] rounded-full animate-spin"></div>
+          <p className="mt-4 text-[var(--color-text-secondary)] font-medium tracking-wide">Loading project...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !project) {
     return (
-      <div className="max-w-4xl mx-auto mt-10 text-center">
-        <h2 className="text-xl font-bold text-rose-500 mb-2">Error Loading Project</h2>
-        <p className="text-slate-600 dark:text-slate-400">{error || 'Project not found.'}</p>
-        <button onClick={() => navigate('/projects')} className="mt-4 px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg">Go Back</button>
+      <div className="max-w-4xl mx-auto mt-10 text-center animate-fade-in">
+        <h2 className="text-2xl font-bold text-rose-500 mb-2">Error Loading Project</h2>
+        <p className="text-[var(--color-text-secondary)]">{error || 'Project not found.'}</p>
+        <button onClick={() => navigate('/projects')} className="mt-6 btn-secondary">Go Back</button>
       </div>
     );
   }
@@ -294,43 +300,43 @@ const ProjectDetailsPage = () => {
   const canEditProject = isFaculty || (isStudent && project.reviews?.length === 0);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-10 animate-fade-in pb-20">
       {/* Header */}
       <div className="flex items-start gap-4">
-        <button onClick={() => navigate('/projects')} className="mt-1 p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-          <HiOutlineArrowLeft className="w-5 h-5" />
+        <button onClick={() => navigate('/projects')} className="mt-1 p-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors">
+          <HiOutlineArrowLeft className="w-6 h-6" />
         </button>
         <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs font-bold text-[var(--color-text-secondary)] uppercase tracking-widest">
               Capstone Project
             </div>
             {canEditProject && (
               <div className="flex items-center gap-2">
-                <button onClick={handleEditProjectClick} className="p-1.5 text-slate-500 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors" title="Edit Project">
+                <button onClick={handleEditProjectClick} className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] rounded-lg transition-colors" title="Edit Project">
                   <HiOutlinePencil className="w-5 h-5" />
                 </button>
-                <button onClick={handleDeleteProject} className="p-1.5 text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors" title="Delete Project">
+                <button onClick={handleDeleteProject} className="p-2 text-[var(--color-text-muted)] hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors" title="Delete Project">
                   <HiOutlineTrash className="w-5 h-5" />
                 </button>
               </div>
             )}
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white leading-tight">
+          <h1 className="text-4xl font-black text-[var(--color-text-primary)] leading-tight tracking-tight">
             {project.title}
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2 max-w-3xl">
+          <p className="text-[var(--color-text-secondary)] mt-3 max-w-3xl text-lg leading-relaxed">
             {project.description}
           </p>
           {(project.githubUrl || project.source) && (
-            <div className="flex flex-wrap gap-4 mt-4">
+            <div className="flex flex-wrap gap-4 mt-6">
               {project.githubUrl && (
-                <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-500 hover:text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1.5 rounded-lg transition-colors">
+                <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] border border-[var(--color-border)] px-4 py-2 rounded-lg transition-all shadow-xs">
                   <HiOutlineLink className="w-4 h-4" /> View Repository
                 </a>
               )}
               {project.source && (
-                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] px-4 py-2 rounded-lg border border-[var(--color-border)] shadow-xs">
                   <HiOutlineDocumentText className="w-4 h-4" /> Source: {project.source}
                 </span>
               )}
@@ -340,19 +346,19 @@ const ProjectDetailsPage = () => {
       </div>
 
       {/* Participants */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="glass p-6 rounded-2xl flex items-center justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="glass-panel p-6 flex items-center justify-between">
           <div>
-            <p className="text-sm font-bold text-slate-500 uppercase mb-1">Student</p>
-            <p className="text-lg font-bold text-slate-900 dark:text-white">{project.student?.name}</p>
-            <p className="text-sm text-slate-500">{project.student?.email}</p>
+            <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest mb-1.5">Student</p>
+            <p className="text-xl font-bold text-[var(--color-text-primary)]">{project.student?.name}</p>
+            <p className="text-sm text-[var(--color-text-secondary)] mt-1">{project.student?.email}</p>
           </div>
         </div>
-        <div className="glass p-6 rounded-2xl flex items-center justify-between">
+        <div className="glass-panel p-6 flex items-center justify-between">
           <div>
-            <p className="text-sm font-bold text-slate-500 uppercase mb-1">Allotted Guide</p>
-            <p className="text-lg font-bold text-slate-900 dark:text-white">{project.guide?.name}</p>
-            <p className="text-sm text-slate-500">{project.guide?.email}</p>
+            <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest mb-1.5">Allotted Guide</p>
+            <p className="text-xl font-bold text-[var(--color-text-primary)]">{project.guide?.name}</p>
+            <p className="text-sm text-[var(--color-text-secondary)] mt-1">{project.guide?.email}</p>
           </div>
         </div>
       </div>
@@ -360,12 +366,12 @@ const ProjectDetailsPage = () => {
 
       {/* Reviews Timeline */}
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Review Schedule</h2>
+        <div className="flex justify-between items-end border-b border-[var(--color-border)] pb-4">
+          <h2 className="text-2xl font-black text-[var(--color-text-primary)] tracking-tight">Review Schedule</h2>
           {isFaculty && project.reviews.length < 4 && (
             <button
               onClick={() => setShowAddReview(!showAddReview)}
-              className="px-4 py-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
+              className="btn-secondary text-sm"
             >
               {showAddReview ? 'Cancel' : '+ Add Review Phase'}
             </button>
@@ -373,24 +379,24 @@ const ProjectDetailsPage = () => {
         </div>
 
         {showAddReview && (
-          <form onSubmit={handleAddReview} className="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-indigo-200 dark:border-indigo-500/30 shadow-sm space-y-4">
-            <h3 className="font-bold text-slate-900 dark:text-white">Schedule New Review</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={handleAddReview} className="glass-panel p-6 animate-slide-up space-y-5">
+            <h3 className="font-bold text-lg text-[var(--color-text-primary)]">Schedule New Review</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-slate-600 dark:text-slate-400">Review Name</label>
-                <input type="text" required value={newReviewName} onChange={e => setNewReviewName(e.target.value)} className="input-field w-full px-3 py-2 rounded-lg text-sm" placeholder="e.g. Midterm Review" />
+                <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Review Name</label>
+                <input type="text" required value={newReviewName} onChange={e => setNewReviewName(e.target.value)} className="input-field w-full px-4 py-2" placeholder="e.g. Midterm Review" />
               </div>
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-slate-600 dark:text-slate-400">Due Date</label>
-                <input type="datetime-local" required value={newReviewDate} onChange={e => setNewReviewDate(e.target.value)} className="input-field w-full px-3 py-2 rounded-lg text-sm" />
+                <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Due Date</label>
+                <input type="datetime-local" required value={newReviewDate} onChange={e => setNewReviewDate(e.target.value)} className="input-field w-full px-4 py-2" />
               </div>
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-slate-600 dark:text-slate-400">Max Marks</label>
-                <input type="number" required min="1" value={newReviewMarks} onChange={e => setNewReviewMarks(e.target.value)} className="input-field w-full px-3 py-2 rounded-lg text-sm" />
+                <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Max Marks</label>
+                <input type="number" required min="1" value={newReviewMarks} onChange={e => setNewReviewMarks(e.target.value)} className="input-field w-full px-4 py-2" />
               </div>
             </div>
             <div className="flex justify-end pt-2">
-              <button type="submit" disabled={addingReview} className="px-6 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-lg disabled:opacity-50 transition-colors">
+              <button type="submit" disabled={addingReview} className="btn-primary disabled:opacity-50">
                 {addingReview ? 'Saving...' : 'Save Review Schedule'}
               </button>
             </div>
@@ -398,8 +404,8 @@ const ProjectDetailsPage = () => {
         )}
         
         {project.reviews.length === 0 && !showAddReview && (
-          <div className="text-center py-10 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 border-dashed">
-            <p className="text-slate-500 dark:text-slate-400 font-medium">
+          <div className="text-center py-16 bg-[var(--color-bg-secondary)] rounded-2xl border border-dashed border-[var(--color-border)]">
+            <p className="text-[var(--color-text-secondary)] font-medium text-lg">
               {isFaculty ? "You haven't scheduled any reviews for this project yet." : "No reviews have been scheduled yet by your guide."}
             </p>
           </div>
@@ -407,50 +413,50 @@ const ProjectDetailsPage = () => {
 
         {project.reviews.map((review, idx) => {
           const isOverdue = new Date() > new Date(review.dueDate) && review.status === 'pending';
-          const canSubmit = isStudent && new Date() <= new Date(review.dueDate) && review.status === 'pending';
+          const canSubmit = isStudent && new Date() <= new Date(review.dueDate) && (review.status === 'pending' || review.status === 'submitted' || (review.status === 'graded' && review.grading?.requireResubmission));
           const canGrade = isFaculty && review.status === 'submitted';
           
           return (
-            <div key={review._id} className="glass p-6 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div key={review._id} className="glass-panel p-6 animate-slide-up">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <h3 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
                     {review.name}
                     {review.status === 'graded' && <HiOutlineCheckCircle className="text-emerald-500 w-5 h-5" />}
                     {isOverdue && <HiOutlineXCircle className="text-rose-500 w-5 h-5" />}
                     {isFaculty && (
                       <div className="flex items-center gap-1 ml-2">
-                        <button onClick={() => handleEditReviewClick(review)} className="p-1 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded transition-colors" title="Edit Review">
+                        <button onClick={() => handleEditReviewClick(review)} className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] rounded transition-colors" title="Edit Review">
                           <HiOutlinePencil className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleDeleteReview(review._id)} className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded transition-colors" title="Delete Review">
+                        <button onClick={() => handleDeleteReview(review._id)} className="p-1.5 text-[var(--color-text-muted)] hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded transition-colors" title="Delete Review">
                           <HiOutlineTrash className="w-4 h-4" />
                         </button>
                       </div>
                     )}
                   </h3>
-                  <p className="text-sm font-medium text-slate-500 flex items-center gap-1 mt-1">
+                  <p className="text-sm font-medium text-[var(--color-text-secondary)] flex items-center gap-1.5 mt-2">
                     <HiOutlineClock className="w-4 h-4" /> 
                     Due: {format(new Date(review.dueDate), 'MMM dd, yyyy h:mm a')}
                   </p>
                 </div>
                 
                 <div className="text-right">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                    review.status === 'graded' ? 'bg-emerald-500/10 text-emerald-500' :
-                    review.status === 'submitted' ? 'bg-blue-500/10 text-blue-500' :
-                    isOverdue ? 'bg-rose-500/10 text-rose-500' :
-                    'bg-amber-500/10 text-amber-500'
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border ${
+                    review.status === 'graded' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                    review.status === 'submitted' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                    isOverdue ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+                    'bg-amber-500/10 text-amber-500 border-amber-500/20'
                   }`}>
                     {isOverdue ? 'Overdue' : review.status}
                   </span>
                   {review.status === 'graded' && (
-                    <div className="text-xl font-bold text-slate-900 dark:text-white mt-2">
-                      {review.grading?.marks} <span className="text-sm text-slate-500">/ {review.maxMarks}</span>
+                    <div className="text-2xl font-black text-[var(--color-text-primary)] mt-3">
+                      {review.grading?.marks} <span className="text-sm font-medium text-[var(--color-text-muted)]">/ {review.maxMarks}</span>
                     </div>
                   )}
                   {review.status === 'graded' && review.grading?.isVerified && (
-                    <div className="mt-1 inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-xs font-bold uppercase">
+                    <div className="mt-2 inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-500 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
                       <HiOutlineShieldCheck className="w-3 h-3" /> Verified
                     </div>
                   )}
@@ -459,100 +465,116 @@ const ProjectDetailsPage = () => {
 
               {/* Uploaded Documents display */}
               {review.submission && (review.submission.reportFile || review.submission.presentationFile || review.submission.githubUrl) && (
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-[var(--color-bg-secondary)] p-5 rounded-xl border border-[var(--color-border)] mb-6 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-xs">
                   {review.submission.githubUrl && (
-                    <a href={review.submission.githubUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-500 hover:underline text-sm font-medium">
-                      <HiOutlineLink className="w-5 h-5" /> GitHub Repository
+                    <a href={review.submission.githubUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[var(--color-text-primary)] hover:underline text-sm font-semibold">
+                      <HiOutlineLink className="w-5 h-5 text-indigo-500" /> GitHub Repository
                     </a>
                   )}
                   {review.submission.reportFile && (
-                    <div className="flex flex-col gap-2">
-                      <a href={`${getBaseUrl()}${review.submission.reportFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-500 hover:underline text-sm font-medium">
-                        <HiOutlineDocumentText className="w-5 h-5" /> Project Report
+                    <div className="flex flex-col gap-3">
+                      <a href={`${getBaseUrl()}${review.submission.reportFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[var(--color-text-primary)] hover:underline text-sm font-semibold">
+                        <HiOutlineDocumentText className="w-5 h-5 text-indigo-500" /> Project Report
                       </a>
                       {isFaculty && (
                         <div className="flex flex-col gap-2">
                           <button 
                             onClick={() => handleCheckPlagiarism(review._id, 'reportFile')}
                             disabled={checkingPlagiarism[`${review._id}-reportFile`]}
-                            className="flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wide bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 py-1 px-2 rounded w-fit transition-colors disabled:opacity-50"
+                            className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-[var(--color-bg-elevated)] border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[var(--color-text-primary)] py-1.5 px-3 rounded-md w-fit transition-all shadow-xs disabled:opacity-50"
                           >
-                            <HiOutlineShieldCheck className="w-3 h-3" /> 
+                            <HiOutlineShieldCheck className="w-3.5 h-3.5" /> 
                             {checkingPlagiarism[`${review._id}-reportFile`] ? 'Checking...' : 'Check Plagiarism'}
                           </button>
                           {plagiarismReports[`${review._id}-reportFile`] && (
-                            <div className="text-xs p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                            <div className="text-xs p-3 bg-[var(--color-bg-elevated)] rounded-md border border-[var(--color-border)] flex justify-between items-center shadow-xs">
                               <div>
-                                <span className="font-bold text-slate-700 dark:text-slate-300">Similarity: </span>
-                                <span className={plagiarismReports[`${review._id}-reportFile`].overallSimilarity > 20 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
-                                  {plagiarismReports[`${review._id}-reportFile`].overallSimilarity}%
-                                </span>
-                              </div>
-                              <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-reportFile`]._id)} className="p-1 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded" title="Download Report PDF">
-                                <HiOutlineDownload className="w-4 h-4" />
-                              </button>
+                                <span className="font-semibold text-[var(--color-text-secondary)]">Similarity: </span>
+                              <span className={plagiarismReports[`${review._id}-reportFile`].overallSimilarity > 20 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
+                                {plagiarismReports[`${review._id}-reportFile`].overallSimilarity}%
+                              </span>
                             </div>
+                            <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-reportFile`]._id)} className="p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)] rounded-md transition-colors" title="Download Report PDF">
+                              <HiOutlineDownload className="w-4 h-4" />
+                            </button>
+                          </div>
                           )}
                         </div>
                       )}
                       {/* For Students, only show the score and download button if available */}
                       {!isFaculty && plagiarismReports[`${review._id}-reportFile`] && (
-                        <div className="text-xs p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 mt-2 flex justify-between items-center">
-                          <div>
-                            <span className="font-bold text-slate-700 dark:text-slate-300">Similarity: </span>
-                            <span className={plagiarismReports[`${review._id}-reportFile`].overallSimilarity > 20 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
-                              {plagiarismReports[`${review._id}-reportFile`].overallSimilarity}%
-                            </span>
+                        <div className="flex flex-col gap-2 mt-2">
+                          <div className="text-xs p-3 bg-[var(--color-bg-elevated)] rounded-md border border-[var(--color-border)] flex justify-between items-center shadow-xs">
+                            <div>
+                              <span className="font-semibold text-[var(--color-text-secondary)]">Similarity: </span>
+                              <span className={plagiarismReports[`${review._id}-reportFile`].overallSimilarity > 35 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
+                                {plagiarismReports[`${review._id}-reportFile`].overallSimilarity}%
+                              </span>
+                            </div>
+                            <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-reportFile`]._id)} className="flex items-center gap-1 font-semibold text-[var(--color-text-primary)] hover:underline">
+                              <HiOutlineDownload className="w-3.5 h-3.5" /> Download
+                            </button>
                           </div>
-                          <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-reportFile`]._id)} className="flex items-center gap-1 text-indigo-500 hover:underline">
-                            <HiOutlineDownload className="w-3 h-3" /> Download
-                          </button>
+                          {plagiarismReports[`${review._id}-reportFile`].overallSimilarity > 35 && review.status !== 'graded' && (
+                            <div className="text-xs p-3 bg-rose-500/10 text-rose-500 font-medium rounded-md border border-rose-500/20 flex items-start gap-2 shadow-xs">
+                              <HiOutlineXCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                              <span>High similarity detected! Please revise your report and resubmit.</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
                   )}
                   {review.submission.presentationFile && (
-                    <div className="flex flex-col gap-2">
-                      <a href={`${getBaseUrl()}${review.submission.presentationFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-500 hover:underline text-sm font-medium">
-                        <HiOutlinePresentationChartBar className="w-5 h-5" /> Presentation
+                    <div className="flex flex-col gap-3">
+                      <a href={`${getBaseUrl()}${review.submission.presentationFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[var(--color-text-primary)] hover:underline text-sm font-semibold">
+                        <HiOutlinePresentationChartBar className="w-5 h-5 text-indigo-500" /> Presentation
                       </a>
                       {isFaculty && (
                         <div className="flex flex-col gap-2">
                           <button 
                             onClick={() => handleCheckPlagiarism(review._id, 'presentationFile')}
                             disabled={checkingPlagiarism[`${review._id}-presentationFile`]}
-                            className="flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wide bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 py-1 px-2 rounded w-fit transition-colors disabled:opacity-50"
+                            className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-[var(--color-bg-elevated)] border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[var(--color-text-primary)] py-1.5 px-3 rounded-md w-fit transition-all shadow-xs disabled:opacity-50"
                           >
-                            <HiOutlineShieldCheck className="w-3 h-3" /> 
+                            <HiOutlineShieldCheck className="w-3.5 h-3.5" /> 
                             {checkingPlagiarism[`${review._id}-presentationFile`] ? 'Checking...' : 'Check Plagiarism'}
                           </button>
                           {plagiarismReports[`${review._id}-presentationFile`] && (
-                            <div className="text-xs p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                            <div className="text-xs p-3 bg-[var(--color-bg-elevated)] rounded-md border border-[var(--color-border)] flex justify-between items-center shadow-xs">
                               <div>
-                                <span className="font-bold text-slate-700 dark:text-slate-300">Similarity: </span>
-                                <span className={plagiarismReports[`${review._id}-presentationFile`].overallSimilarity > 20 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
-                                  {plagiarismReports[`${review._id}-presentationFile`].overallSimilarity}%
-                                </span>
-                              </div>
-                              <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-presentationFile`]._id)} className="p-1 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded" title="Download Report PDF">
-                                <HiOutlineDownload className="w-4 h-4" />
-                              </button>
+                                <span className="font-semibold text-[var(--color-text-secondary)]">Similarity: </span>
+                              <span className={plagiarismReports[`${review._id}-presentationFile`].overallSimilarity > 35 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
+                                {plagiarismReports[`${review._id}-presentationFile`].overallSimilarity}%
+                              </span>
                             </div>
+                            <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-presentationFile`]._id)} className="p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)] rounded-md transition-colors" title="Download Report PDF">
+                              <HiOutlineDownload className="w-4 h-4" />
+                            </button>
+                          </div>
                           )}
                         </div>
                       )}
                       {/* For Students, only show the score and download button if available */}
                       {!isFaculty && plagiarismReports[`${review._id}-presentationFile`] && (
-                        <div className="text-xs p-2 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 mt-2 flex justify-between items-center">
-                          <div>
-                            <span className="font-bold text-slate-700 dark:text-slate-300">Similarity: </span>
-                            <span className={plagiarismReports[`${review._id}-presentationFile`].overallSimilarity > 20 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
-                              {plagiarismReports[`${review._id}-presentationFile`].overallSimilarity}%
-                            </span>
+                        <div className="flex flex-col gap-2 mt-2">
+                          <div className="text-xs p-3 bg-[var(--color-bg-elevated)] rounded-md border border-[var(--color-border)] flex justify-between items-center shadow-xs">
+                            <div>
+                              <span className="font-semibold text-[var(--color-text-secondary)]">Similarity: </span>
+                              <span className={plagiarismReports[`${review._id}-presentationFile`].overallSimilarity > 35 ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
+                                {plagiarismReports[`${review._id}-presentationFile`].overallSimilarity}%
+                              </span>
+                            </div>
+                            <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-presentationFile`]._id)} className="flex items-center gap-1 font-semibold text-[var(--color-text-primary)] hover:underline">
+                              <HiOutlineDownload className="w-3.5 h-3.5" /> Download
+                            </button>
                           </div>
-                          <button onClick={() => downloadPlagiarismReport(plagiarismReports[`${review._id}-presentationFile`]._id)} className="flex items-center gap-1 text-indigo-500 hover:underline">
-                            <HiOutlineDownload className="w-3 h-3" /> Download
-                          </button>
+                          {plagiarismReports[`${review._id}-presentationFile`].overallSimilarity > 35 && review.status !== 'graded' && (
+                            <div className="text-xs p-3 bg-rose-500/10 text-rose-500 font-medium rounded-md border border-rose-500/20 flex items-start gap-2 shadow-xs">
+                              <HiOutlineXCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                              <span>High similarity detected! Please revise your presentation and resubmit.</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -562,43 +584,45 @@ const ProjectDetailsPage = () => {
               
               {/* Grading Feedback display */}
               {review.status === 'graded' && review.grading?.feedback && (
-                <div className="bg-emerald-50 dark:bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/20 mb-4">
-                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-1">Feedback from {review.grading.gradedBy?.name}</p>
-                  <p className="text-sm text-slate-700 dark:text-slate-300">{review.grading.feedback}</p>
+                <div className={`p-5 rounded-xl border mb-6 shadow-xs ${review.grading?.requireResubmission ? 'bg-amber-500/10 border-amber-500/30' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
+                  <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${review.grading?.requireResubmission ? 'text-amber-500' : 'text-emerald-500'}`}>
+                    Feedback from {review.grading.gradedBy?.name} {review.grading?.requireResubmission && '— Resubmission Required'}
+                  </p>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">{review.grading.feedback}</p>
                 </div>
               )}
 
               {/* Student Submission Form Toggle */}
               {canSubmit && activeReviewId !== review._id && (
-                <button onClick={() => setActiveReviewId(review._id)} className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold rounded-lg transition-colors">
+                <button onClick={() => setActiveReviewId(review._id)} className="btn-primary text-sm mt-2">
                   Upload Documents
                 </button>
               )}
 
               {/* Student Submission Form */}
               {canSubmit && activeReviewId === review._id && (
-                <form onSubmit={(e) => handleStudentSubmit(e, review._id)} className="mt-4 p-6 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-                  <h4 className="font-bold text-slate-900 dark:text-white">Submit for {review.name}</h4>
+                <form onSubmit={(e) => handleStudentSubmit(e, review._id)} className="mt-6 p-6 glass border border-[var(--color-border)] rounded-xl space-y-5 animate-slide-up">
+                  <h4 className="font-bold text-lg text-[var(--color-text-primary)]">Submit for {review.name}</h4>
                   
                   <div>
-                    <label className="block text-sm font-semibold mb-1 text-slate-700 dark:text-slate-300">GitHub URL (Optional)</label>
-                    <input type="url" value={githubUrl} onChange={e => setGithubUrl(e.target.value)} className="input-field w-full px-3 py-2 rounded-lg text-sm outline-none" placeholder="https://github.com/..." />
+                    <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">GitHub URL (Optional)</label>
+                    <input type="url" value={githubUrl} onChange={e => setGithubUrl(e.target.value)} className="input-field w-full px-4 py-2" placeholder="https://github.com/..." />
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-sm font-semibold mb-1 text-slate-700 dark:text-slate-300">Project Report (PDF/Docx)</label>
-                      <input type="file" accept=".pdf,.doc,.docx" onChange={e => setReportFile(e.target.files[0])} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                      <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Project Report (PDF/Docx)</label>
+                      <input type="file" accept=".pdf,.doc,.docx" onChange={e => setReportFile(e.target.files[0])} className="w-full text-sm text-[var(--color-text-muted)] file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--color-bg-secondary)] file:text-[var(--color-text-primary)] hover:file:bg-[var(--color-border)] file:cursor-pointer transition-all" />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold mb-1 text-slate-700 dark:text-slate-300">Presentation (PPT/PPTX)</label>
-                      <input type="file" accept=".ppt,.pptx" onChange={e => setPresentationFile(e.target.files[0])} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                      <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Presentation (PPT/PPTX)</label>
+                      <input type="file" accept=".ppt,.pptx" onChange={e => setPresentationFile(e.target.files[0])} className="w-full text-sm text-[var(--color-text-muted)] file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--color-bg-secondary)] file:text-[var(--color-text-primary)] hover:file:bg-[var(--color-border)] file:cursor-pointer transition-all" />
                     </div>
                   </div>
                   
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button type="button" onClick={() => setActiveReviewId(null)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold rounded-lg disabled:opacity-50">
+                  <div className="flex justify-end gap-3 pt-4 border-t border-[var(--color-border)]">
+                    <button type="button" onClick={() => setActiveReviewId(null)} className="btn-secondary text-sm">Cancel</button>
+                    <button type="submit" disabled={submitting} className="btn-primary text-sm disabled:opacity-50">
                       {submitting ? 'Submitting...' : 'Confirm Submission'}
                     </button>
                   </div>
@@ -607,41 +631,50 @@ const ProjectDetailsPage = () => {
 
               {/* Faculty Grading Form Toggle */}
               {canGrade && gradingReviewId !== review._id && (
-                <button onClick={() => setGradingReviewId(review._id)} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-lg transition-colors">
+                <button onClick={() => setGradingReviewId(review._id)} className="btn-primary mt-2" style={{background: 'var(--color-emerald)'}}>
                   Grade Submission
                 </button>
               )}
 
               {/* Faculty Grading Form */}
               {canGrade && gradingReviewId === review._id && (
-                <form onSubmit={(e) => handleFacultyGrade(e, review._id)} className="mt-4 p-6 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-                  <h4 className="font-bold text-slate-900 dark:text-white">Evaluate {review.name}</h4>
+                <form onSubmit={(e) => handleFacultyGrade(e, review._id)} className="mt-6 p-6 glass border border-[var(--color-border)] rounded-xl space-y-5 animate-slide-up">
+                  <h4 className="font-bold text-lg text-[var(--color-text-primary)]">Evaluate {review.name}</h4>
                   
                   <div>
-                    <label className="block text-sm font-semibold mb-1 text-slate-700 dark:text-slate-300">Marks (out of {review.maxMarks}) <span className="text-rose-500">*</span></label>
-                    <input type="number" required min="0" max={review.maxMarks} value={marks} onChange={e => setMarks(e.target.value)} className="input-field w-full md:w-1/3 px-3 py-2 rounded-lg text-sm outline-none" />
+                    <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Marks (out of {review.maxMarks}) <span className="text-rose-500">*</span></label>
+                    <input type="number" required min="0" max={review.maxMarks} value={marks} onChange={e => setMarks(e.target.value)} className="input-field w-full md:w-1/3 px-4 py-2" />
                   </div>
                   
-                  <div>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 cursor-pointer">
                       <input 
                         type="checkbox" 
                         checked={isVerified}
                         onChange={(e) => setIsVerified(e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 bg-slate-100 border-slate-300 rounded focus:ring-indigo-500 focus:ring-2"
+                        className="w-4 h-4 text-[var(--color-text-primary)] bg-[var(--color-bg-elevated)] border-[var(--color-border)] rounded focus:ring-1 focus:ring-[var(--color-text-primary)]"
                       />
-                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Mark Documents as Verified</span>
+                      <span className="text-sm font-medium text-[var(--color-text-primary)]">Mark Documents as Verified</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={requireResubmission}
+                        onChange={(e) => setRequireResubmission(e.target.checked)}
+                        className="w-4 h-4 text-amber-500 bg-[var(--color-bg-elevated)] border-[var(--color-border)] rounded focus:ring-1 focus:ring-amber-500"
+                      />
+                      <span className="text-sm font-medium text-[var(--color-text-primary)]">Require Resubmission <span className="text-[var(--color-text-muted)] font-normal">(e.g. if plagiarized)</span></span>
                     </label>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold mb-1 text-slate-700 dark:text-slate-300">Feedback</label>
-                    <textarea rows="3" value={feedback} onChange={e => setFeedback(e.target.value)} className="input-field w-full px-3 py-2 rounded-lg text-sm outline-none resize-y" placeholder="Provide constructive feedback..."></textarea>
+                    <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Feedback</label>
+                    <textarea rows="4" value={feedback} onChange={e => setFeedback(e.target.value)} className="input-field w-full px-4 py-3 resize-y" placeholder="Provide constructive feedback..."></textarea>
                   </div>
                   
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button type="button" onClick={() => setGradingReviewId(null)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">Cancel</button>
-                    <button type="submit" disabled={grading} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-lg disabled:opacity-50">
+                  <div className="flex justify-end gap-3 pt-4 border-t border-[var(--color-border)]">
+                    <button type="button" onClick={() => setGradingReviewId(null)} className="btn-secondary text-sm">Cancel</button>
+                    <button type="submit" disabled={grading} className="btn-primary text-sm disabled:opacity-50" style={{background: 'var(--color-emerald)'}}>
                       {grading ? 'Saving...' : 'Submit Grade'}
                     </button>
                   </div>
@@ -654,31 +687,31 @@ const ProjectDetailsPage = () => {
 
       {/* Edit Project Modal */}
       {showEditProjectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Edit Project</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="glass-panel w-full max-w-lg overflow-hidden animate-pop-in">
+            <div className="p-6 border-b border-[var(--color-border)]">
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Edit Project</h3>
             </div>
-            <form onSubmit={handleUpdateProject} className="p-6 space-y-4">
+            <form onSubmit={handleUpdateProject} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Project Title</label>
-                <input type="text" required value={editProjectTitle} onChange={e => setEditProjectTitle(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" />
+                <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Project Title</label>
+                <input type="text" required value={editProjectTitle} onChange={e => setEditProjectTitle(e.target.value)} className="input-field w-full px-4 py-2" />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Description</label>
-                <textarea required rows={4} value={editProjectDesc} onChange={e => setEditProjectDesc(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm"></textarea>
+                <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Description</label>
+                <textarea required rows={4} value={editProjectDesc} onChange={e => setEditProjectDesc(e.target.value)} className="input-field w-full px-4 py-2 resize-y"></textarea>
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">GitHub URL (Optional)</label>
-                <input type="url" value={editProjectGithub} onChange={e => setEditProjectGithub(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" />
+                <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">GitHub URL (Optional)</label>
+                <input type="url" value={editProjectGithub} onChange={e => setEditProjectGithub(e.target.value)} className="input-field w-full px-4 py-2" />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Source (Optional)</label>
-                <input type="text" value={editProjectSource} onChange={e => setEditProjectSource(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" placeholder="e.g. self-proposed" />
+                <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Source (Optional)</label>
+                <input type="text" value={editProjectSource} onChange={e => setEditProjectSource(e.target.value)} className="input-field w-full px-4 py-2" placeholder="e.g. self-proposed" />
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <button type="button" onClick={() => setShowEditProjectModal(false)} className="px-4 py-2 font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl transition-colors">Save Changes</button>
+              <div className="flex justify-end gap-3 pt-6 border-t border-[var(--color-border)]">
+                <button type="button" onClick={() => setShowEditProjectModal(false)} className="btn-secondary">Cancel</button>
+                <button type="submit" className="btn-primary">Save Changes</button>
               </div>
             </form>
           </div>
@@ -687,27 +720,27 @@ const ProjectDetailsPage = () => {
 
       {/* Edit Review Modal */}
       {editingReview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Edit Review Schedule</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="glass-panel w-full max-w-md overflow-hidden animate-pop-in">
+            <div className="p-6 border-b border-[var(--color-border)]">
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Edit Review Schedule</h3>
             </div>
-            <form onSubmit={handleUpdateReview} className="p-6 space-y-4">
+            <form onSubmit={handleUpdateReview} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Review Name</label>
-                <input type="text" required value={editReviewName} onChange={e => setEditReviewName(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" />
+                <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Review Name</label>
+                <input type="text" required value={editReviewName} onChange={e => setEditReviewName(e.target.value)} className="input-field w-full px-4 py-2" />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Due Date</label>
-                <input type="datetime-local" required value={editReviewDate} onChange={e => setEditReviewDate(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" />
+                <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Due Date</label>
+                <input type="datetime-local" required value={editReviewDate} onChange={e => setEditReviewDate(e.target.value)} className="input-field w-full px-4 py-2" />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-1.5 text-slate-700 dark:text-slate-300">Max Marks</label>
-                <input type="number" required min="1" value={editReviewMarks} onChange={e => setEditReviewMarks(e.target.value)} className="input-field w-full px-3 py-2 rounded-xl text-sm" />
+                <label className="block text-sm font-semibold mb-2 text-[var(--color-text-secondary)]">Max Marks</label>
+                <input type="number" required min="1" value={editReviewMarks} onChange={e => setEditReviewMarks(e.target.value)} className="input-field w-full px-4 py-2" />
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <button type="button" onClick={() => setEditingReview(null)} className="px-4 py-2 font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl transition-colors">Save Changes</button>
+              <div className="flex justify-end gap-3 pt-6 border-t border-[var(--color-border)]">
+                <button type="button" onClick={() => setEditingReview(null)} className="btn-secondary">Cancel</button>
+                <button type="submit" className="btn-primary">Save Changes</button>
               </div>
             </form>
           </div>

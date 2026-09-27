@@ -16,6 +16,7 @@ import {
 } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import PeerReviewSection from '../components/PeerReviewSection';
 
 const SubmissionDetailsPage = () => {
   const { id } = useParams();
@@ -25,7 +26,11 @@ const SubmissionDetailsPage = () => {
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('execution'); // 'execution' or 'code'
+  const [activeTab, setActiveTab] = useState('execution'); // 'execution', 'code', or 'ci'
+  
+  // CI/CD Webhook State
+  const [webhookUrl, setWebhookUrl] = useState(null);
+  const [isRegisteringWebhook, setIsRegisteringWebhook] = useState(false);
   
   // Grading State
   const [marks, setMarks] = useState('');
@@ -75,8 +80,8 @@ const SubmissionDetailsPage = () => {
 
   if (error || !submission) {
     return (
-      <div className="max-w-4xl mx-auto mt-10">
-        <div className="glass rounded-2xl p-8 text-center text-rose-500">
+      <div className="max-w-4xl mx-auto mt-10 animate-fade-in">
+        <div className="glass-panel p-8 text-center text-rose-500">
           <h2 className="text-xl font-bold mb-2">Error Loading Submission</h2>
           <p>{error || 'Submission not found.'}</p>
           <button onClick={() => navigate('/submissions')} className="mt-4 px-4 py-2 bg-rose-500/10 rounded-lg font-semibold hover:bg-rose-500/20 transition-colors">
@@ -102,6 +107,20 @@ const SubmissionDetailsPage = () => {
       setError(err.response?.data?.message || 'Failed to submit grade');
     } finally {
       setIsGrading(false);
+    }
+  };
+
+  const handleRegisterWebhook = async () => {
+    try {
+      setIsRegisteringWebhook(true);
+      const res = await api.post('/webhooks/register', { submissionId: id });
+      setWebhookUrl(res.data.webhookUrl);
+      setSubmission(prev => ({ ...prev, githubWebhookEnabled: true }));
+      toast.success(res.data.message);
+    } catch (err) {
+      toast.error('Failed to register webhook');
+    } finally {
+      setIsRegisteringWebhook(false);
     }
   };
 
@@ -147,25 +166,25 @@ const SubmissionDetailsPage = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 animate-fade-in pb-12">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
         <div className="flex items-start gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="mt-1 p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="mt-1 p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] transition-colors"
           >
             <HiOutlineArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <div className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">
+            <div className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">
               Submission Details
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+            <h1 className="text-3xl font-black text-[var(--color-text-primary)] tracking-tight leading-tight">
               {submission.assignment?.title}
             </h1>
-            <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              By <span className="font-semibold text-slate-700 dark:text-slate-300">{submission.student?.name}</span> • {format(new Date(submission.submittedAt), 'MMM dd, yyyy h:mm a')}
+            <div className="text-sm font-medium text-[var(--color-text-secondary)] mt-1">
+              By <span className="font-bold text-[var(--color-text-primary)]">{submission.student?.name}</span> • {format(new Date(submission.submittedAt), 'MMM dd, yyyy h:mm a')}
             </div>
           </div>
         </div>
@@ -178,20 +197,20 @@ const SubmissionDetailsPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Summary Cards */}
         <div className="space-y-6">
-          <div className="glass rounded-2xl p-6 text-center">
-            <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">Score</h3>
-            <div className={`text-5xl font-bold mb-2 ${
+          <div className="glass-panel p-6 text-center shadow-xs">
+            <h3 className="text-sm font-bold text-[var(--color-text-muted)] uppercase tracking-widest mb-1">Score</h3>
+            <div className={`text-5xl font-black mb-2 tracking-tight ${
               submission.status === 'evaluated' 
                 ? (submission.marks / (submission.assignment?.maxMarks || 100) >= 0.8 ? 'text-emerald-500' : 'text-amber-500')
-                : 'text-slate-300 dark:text-slate-700'
+                : 'text-[var(--color-text-muted)]'
             }`}>
               {submission.status === 'evaluated' ? submission.marks : '-'}
             </div>
-            <div className="text-sm font-medium text-slate-400">out of {submission.assignment?.maxMarks || 100}</div>
+            <div className="text-sm font-bold text-[var(--color-text-secondary)]">out of {submission.assignment?.maxMarks || 100}</div>
           </div>
 
-          <div className="glass rounded-2xl p-6">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 uppercase tracking-wider">Metrics</h3>
+          <div className="glass-panel p-6 shadow-xs">
+            <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-4 uppercase tracking-widest">Metrics</h3>
             <ul className="space-y-4 text-sm">
               <li className="flex justify-between items-center pb-3 border-b border-slate-200/50 dark:border-slate-700/50">
                 <span className="text-slate-500">Test Cases Passed</span>
@@ -248,14 +267,48 @@ const SubmissionDetailsPage = () => {
                   </div>
                 </li>
               )}
+              {submission.status === 'evaluated' && submission.staticAnalysisReport && (
+                <li className="flex flex-col pb-3 border-b border-slate-200/50 dark:border-slate-700/50">
+                  <div className="flex justify-between items-center w-full mb-2">
+                    <span className="text-slate-500">Code Quality Score</span>
+                    <span className={`font-bold ${submission.codeQualityScore >= 80 ? 'text-emerald-500' : submission.codeQualityScore >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+                      {submission.codeQualityScore}/100
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-center">
+                      <div className="text-[10px] text-slate-500 uppercase font-bold">Complexity</div>
+                      <div className="text-lg font-bold text-slate-700 dark:text-slate-300">{submission.staticAnalysisReport.metrics?.cyclomaticComplexity || 0}</div>
+                    </div>
+                    <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-center">
+                      <div className="text-[10px] text-slate-500 uppercase font-bold">Smells</div>
+                      <div className="text-lg font-bold text-slate-700 dark:text-slate-300">{submission.staticAnalysisReport.metrics?.codeSmells || 0}</div>
+                    </div>
+                  </div>
+                  {submission.staticAnalysisReport.issues && submission.staticAnalysisReport.issues.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <div className="text-xs font-bold text-slate-500">Analysis Issues:</div>
+                      {submission.staticAnalysisReport.issues.map((issue, idx) => (
+                        <div key={idx} className={`p-2 text-xs rounded-lg border ${
+                          issue.severity === 'error' ? 'bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-400' :
+                          issue.severity === 'warning' ? 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400' :
+                          'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-400'
+                        }`}>
+                          <span className="font-bold">{issue.file}:</span> {issue.message}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              )}
             </ul>
           </div>
         </div>
 
         {/* Right Column: Execution Logs, Code, or Project Details */}
-        <div className="lg:col-span-2 glass rounded-2xl overflow-hidden flex flex-col min-h-[500px]">
+        <div className="lg:col-span-2 glass-panel overflow-hidden flex flex-col min-h-[500px] shadow-xs">
           {submission.assignment?.type === 'project' ? (
-            <div className="p-8 flex-1 overflow-y-auto bg-slate-50/30 dark:bg-slate-900/20 space-y-8">
+            <div className="p-8 flex-1 overflow-y-auto bg-[var(--color-bg-secondary)] space-y-8">
               <div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Project Submission</h3>
                 
@@ -331,30 +384,51 @@ const SubmissionDetailsPage = () => {
           ) : (
             <>
               {/* Tabs */}
-              <div className="flex border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/30">
+              <div className="flex border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] backdrop-blur-sm">
             <button
               onClick={() => setActiveTab('execution')}
               className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
                 activeTab === 'execution'
-                  ? 'text-indigo-500 border-b-2 border-indigo-500 bg-white/50 dark:bg-slate-800/50'
-                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                  ? 'text-indigo-500 border-b-2 border-indigo-500 bg-[var(--color-bg-primary)]'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]'
               }`}
             >
               <HiOutlineTerminal className="w-5 h-5" /> Execution Logs
             </button>
             <button
-              onClick={() => setActiveTab('code')}
+            onClick={() => setActiveTab('code')}
+            className={`flex-1 py-3 px-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+              activeTab === 'code'
+                ? 'text-indigo-500 border-b-2 border-indigo-500 bg-[var(--color-bg-primary)]'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]'
+            }`}
+          >
+            <HiOutlineCode className="w-5 h-5" /> Source Code
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`flex-1 py-3 px-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+              activeTab === 'reviews'
+                ? 'text-indigo-500 border-b-2 border-indigo-500 bg-[var(--color-bg-primary)]'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]'
+            }`}
+          >
+            <HiOutlineDocumentText className="w-5 h-5" /> Peer Reviews
+          </button>
+            <button
+              onClick={() => setActiveTab('ci')}
               className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
-                activeTab === 'code'
-                  ? 'text-indigo-500 border-b-2 border-indigo-500 bg-white/50 dark:bg-slate-800/50'
-                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                activeTab === 'ci'
+                  ? 'text-indigo-500 border-b-2 border-indigo-500 bg-[var(--color-bg-primary)]'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]'
               }`}
             >
-              <HiOutlineCode className="w-5 h-5" /> Source Code
+              <HiOutlineLink className="w-5 h-5" /> CI/CD Pipeline
             </button>
           </div>
 
-          <div className="p-6 flex-1 overflow-y-auto bg-slate-50/30 dark:bg-slate-900/20">
+          <div className="p-6 flex-1 overflow-y-auto bg-[var(--color-bg-primary)]">
             {activeTab === 'execution' ? (
               <div className="space-y-6">
                 {submission.feedback && (
@@ -423,7 +497,7 @@ const SubmissionDetailsPage = () => {
                   </div>
                 )}
               </div>
-            ) : (
+            ) : activeTab === 'code' ? (
               <div className="space-y-6">
                 {submission.githubUrl ? (
                   <div className="p-6 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-between">
@@ -475,7 +549,86 @@ const SubmissionDetailsPage = () => {
                   </div>
                 )}
               </div>
-            )}
+            ) : activeTab === 'ci' ? (
+              <div className="space-y-6">
+                {!submission.githubWebhookEnabled ? (
+                  <div className="text-center py-10 glass-panel p-8">
+                    <h3 className="text-xl font-bold mb-4 text-[var(--color-text-primary)] tracking-tight">Enable CI/CD Pipeline</h3>
+                    <p className="text-[var(--color-text-secondary)] font-medium mb-6 max-w-md mx-auto">
+                      Connect this submission to your GitHub repository to automatically evaluate your code every time you push.
+                    </p>
+                    <button
+                      onClick={handleRegisterWebhook}
+                      disabled={isRegisteringWebhook}
+                      className="btn-primary inline-flex"
+                    >
+                      {isRegisteringWebhook ? 'Registering...' : 'Generate Webhook URL'}
+                    </button>
+                    {webhookUrl && (
+                      <div className="mt-6 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg text-left">
+                        <p className="text-sm font-bold mb-2">Webhook URL generated:</p>
+                        <code className="text-xs bg-slate-200 dark:bg-slate-700 p-2 rounded break-all block">
+                          {webhookUrl}
+                        </code>
+                        <p className="text-xs text-slate-500 mt-2">
+                          Add this as a webhook payload URL in your GitHub repository settings.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                        <HiOutlineTerminal className="w-6 h-6 text-indigo-500" /> Commit History
+                      </h3>
+                      <span className="text-xs font-bold px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full">
+                        Webhook Active
+                      </span>
+                    </div>
+
+                    {!submission.commits || submission.commits.length === 0 ? (
+                      <div className="text-center py-8 text-[var(--color-text-secondary)] font-medium glass-panel">
+                        Waiting for your first git push...
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {submission.commits.slice().reverse().map((commit, idx) => (
+                          <div key={idx} className="p-4 glass-panel flex items-center justify-between border-l-4 border-indigo-500">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-mono text-sm font-bold text-indigo-500">{commit.hash.substring(0, 7)}</span>
+                                <span className="text-slate-400 text-xs text-slate-500">{format(new Date(commit.timestamp || Date.now()), 'MMM dd, h:mm a')}</span>
+                              </div>
+                              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{commit.message}</p>
+                              <p className="text-xs text-slate-500 mt-1">by {commit.author}</p>
+                            </div>
+                            <div className="text-right">
+                              <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                                commit.status === 'evaluated' ? 'bg-emerald-500/10 text-emerald-500' :
+                                commit.status === 'error' ? 'bg-rose-500/10 text-rose-500' :
+                                'bg-amber-500/10 text-amber-500 animate-pulse'
+                              }`}>
+                                {commit.status.toUpperCase()}
+                              </span>
+                              {commit.status === 'evaluated' && (
+                                <div className="mt-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                                  Score: {commit.marks}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : activeTab === 'reviews' ? (
+              <div className="space-y-6">
+                <PeerReviewSection submission={submission} />
+              </div>
+            ) : null}
           </div>
           </>
         )}

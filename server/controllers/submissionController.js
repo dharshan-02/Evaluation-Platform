@@ -4,6 +4,7 @@ const AdmZip = require('adm-zip');
 const Submission = require('../models/Submission');
 const Assignment = require('../models/Assignment');
 const { getIO } = require('../socket');
+const { processSubmission } = require('../services/autoProcessingService');
 
 /**
  * @route   POST /api/submissions
@@ -152,6 +153,14 @@ const createSubmission = async (req, res, next) => {
       message: 'Submission uploaded successfully.',
       submission,
     });
+
+    // Fire-and-forget: trigger automatic evaluation + plagiarism detection
+    // This runs asynchronously so the student gets an instant response
+    if (assignment.type === 'code' && submission._id) {
+      processSubmission(submission._id).catch((err) => {
+        console.error('Auto-processing failed:', err.message);
+      });
+    }
   } catch (error) {
     next(error);
   }

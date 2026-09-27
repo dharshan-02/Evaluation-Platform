@@ -118,10 +118,10 @@ const SubmissionsPage = () => {
         header: 'Assignment',
         cell: info => (
           <div>
-            <div className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1">
+            <div className="font-bold text-sm text-[var(--color-text-primary)] tracking-tight line-clamp-1">
               {info.getValue() || 'Deleted Assignment'}
             </div>
-            <div className="text-xs text-slate-500 mt-1">{info.row.original.assignment?.course || 'Unknown'}</div>
+            <div className="text-xs font-medium text-[var(--color-text-secondary)] mt-1">{info.row.original.assignment?.course || 'Unknown'}</div>
           </div>
         )
       }
@@ -134,10 +134,10 @@ const SubmissionsPage = () => {
         header: 'Student',
         cell: info => (
           <div>
-            <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <div className="text-sm font-bold text-[var(--color-text-primary)]">
               {info.getValue() || 'Unknown Student'}
             </div>
-            <div className="text-xs text-slate-500 mt-1">{info.row.original.student?.email}</div>
+            <div className="text-xs font-medium text-[var(--color-text-secondary)] mt-1">{info.row.original.student?.email}</div>
           </div>
         )
       });
@@ -148,7 +148,7 @@ const SubmissionsPage = () => {
         accessorKey: 'language',
         header: 'Language',
         cell: info => (
-          <span className="text-xs font-semibold px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase">
+          <span className="text-[10px] font-bold px-2 py-1 rounded bg-[var(--color-bg-hover)] text-[var(--color-text-secondary)] uppercase tracking-widest border border-[var(--color-border)] shadow-xs">
             {info.getValue()}
           </span>
         )
@@ -157,7 +157,7 @@ const SubmissionsPage = () => {
         accessorFn: row => new Date(row.submittedAt),
         id: 'submittedAt',
         header: 'Submitted At',
-        cell: info => <span className="text-sm text-slate-600 dark:text-slate-400">{format(info.getValue(), 'MMM dd, h:mm a')}</span>
+        cell: info => <span className="text-sm font-medium text-[var(--color-text-secondary)]">{format(info.getValue(), 'MMM dd, h:mm a')}</span>
       },
       {
         accessorKey: 'status',
@@ -236,12 +236,12 @@ const SubmissionsPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-8 animate-fade-in pb-12">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Submissions</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="text-3xl font-black text-[var(--color-text-primary)] tracking-tight">Submissions</h1>
+          <p className="text-sm font-medium text-[var(--color-text-secondary)] mt-1">
             {user?.role === 'student' ? 'Track your project evaluation statuses.' : 'Review and monitor student project submissions.'}
           </p>
         </div>
@@ -263,34 +263,33 @@ const SubmissionsPage = () => {
         {['admin', 'faculty'].includes(user?.role) && submissions.length > 0 && (
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-            style={{ background: 'var(--gradient-brand)' }}
+            className="btn-primary flex items-center gap-2 shadow-md"
           >
-            <HiOutlineDownload className="w-4 h-4" />
+            <HiOutlineDownload className="w-5 h-5" />
             Export to CSV
           </button>
         )}
       </div>
 
       {/* Filters and Search */}
-      <div className="glass rounded-2xl p-4 flex flex-col sm:flex-row gap-4">
+      <div className="glass-panel p-4 flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1 group">
-          <HiOutlineSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+          <HiOutlineSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)] group-focus-within:text-indigo-500 transition-colors" />
           <input
             type="text"
             placeholder={user?.role === 'student' ? "Search by assignment title..." : "Search by student name or assignment..."}
             value={globalFilter ?? ''}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            className="input-field w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
+            className="input-field w-full pl-10 pr-4 py-2.5 outline-none"
           />
         </div>
         
         <div className="relative min-w-[160px] group">
-          <HiOutlineFilter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+          <HiOutlineFilter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)] group-focus-within:text-indigo-500 transition-colors" />
           <select
             value={statusFilter}
             onChange={handleStatusFilterChange}
-            className="input-field w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none appearance-none cursor-pointer"
+            className="input-field w-full pl-10 pr-4 py-2.5 outline-none appearance-none cursor-pointer"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -302,18 +301,21 @@ const SubmissionsPage = () => {
       </div>
 
       {/* Data Table */}
-      <div className="glass rounded-2xl overflow-hidden flex flex-col">
+      <div className="glass-panel overflow-hidden flex flex-col animate-slide-up">
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
+            <div className="animate-pulse-subtle flex flex-col items-center">
+              <div className="w-12 h-12 border-4 border-[var(--color-border)] border-t-[var(--color-text-primary)] rounded-full animate-spin"></div>
+              <p className="mt-4 text-[var(--color-text-secondary)] font-medium tracking-wide">Loading submissions...</p>
+            </div>
           </div>
         ) : submissions.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <HiOutlineDocumentReport className="w-8 h-8 text-slate-400" />
+          <div className="p-12 text-center animate-slide-up">
+            <div className="w-16 h-16 bg-[var(--color-bg-hover)] rounded-full flex items-center justify-center mx-auto mb-4 border border-[var(--color-border)] shadow-xs">
+              <HiOutlineDocumentReport className="w-8 h-8 text-[var(--color-text-muted)]" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">No submissions found</h3>
-            <p className="text-slate-500 mt-2">Try adjusting your filters or search query.</p>
+            <h3 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)]">No submissions found</h3>
+            <p className="text-[var(--color-text-secondary)] font-medium mt-2">Try adjusting your filters or search query.</p>
           </div>
         ) : (
           <>
@@ -321,12 +323,12 @@ const SubmissionsPage = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   {table.getHeaderGroups().map(headerGroup => (
-                    <tr key={headerGroup.id} className="border-b border-slate-200/50 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/30">
+                    <tr key={headerGroup.id} className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
                       {headerGroup.headers.map(header => (
                         <th 
                           key={header.id} 
                           onClick={header.column.getToggleSortingHandler()}
-                          className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors select-none"
+                          className="px-6 py-4 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest cursor-pointer hover:bg-[var(--color-bg-hover)] transition-colors select-none"
                         >
                           <div className="flex items-center gap-2">
                             {flexRender(header.column.columnDef.header, header.getContext())}
@@ -340,12 +342,12 @@ const SubmissionsPage = () => {
                     </tr>
                   ))}
                 </thead>
-                <tbody className="divide-y divide-slate-200/50 dark:divide-slate-700/50">
+                <tbody className="divide-y divide-[var(--color-border)]">
                   {table.getRowModel().rows.map(row => (
                     <tr 
                       key={row.id} 
                       onClick={() => navigate(`/submissions/${row.original._id}`)}
-                      className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                      className="hover:bg-[var(--color-bg-hover)] transition-colors cursor-pointer group"
                     >
                       {row.getVisibleCells().map(cell => (
                         <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm">
@@ -359,37 +361,37 @@ const SubmissionsPage = () => {
             </div>
             
             {/* Pagination Controls */}
-            <div className="px-6 py-4 border-t border-slate-200/50 dark:border-slate-700/50 flex items-center justify-between bg-slate-50/30 dark:bg-slate-900/20">
-              <span className="text-sm text-slate-500">
-                Page <strong>{table.getState().pagination.pageIndex + 1}</strong> of{' '}
-                <strong>{table.getPageCount()}</strong>
+            <div className="px-6 py-4 border-t border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-secondary)]">
+              <span className="text-sm font-medium text-[var(--color-text-secondary)]">
+                Page <strong className="text-[var(--color-text-primary)]">{table.getState().pagination.pageIndex + 1}</strong> of{' '}
+                <strong className="text-[var(--color-text-primary)]">{table.getPageCount()}</strong>
               </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => table.setPageIndex(0)}
                   disabled={!table.getCanPreviousPage()}
-                  className="p-1 rounded text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50"
+                  className="p-1 rounded text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)] disabled:opacity-50 transition-colors cursor-pointer"
                 >
                   <HiChevronDoubleLeft className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
-                  className="p-1 rounded text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50"
+                  className="p-1 rounded text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)] disabled:opacity-50 transition-colors cursor-pointer"
                 >
                   <HiChevronLeft className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
-                  className="p-1 rounded text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50"
+                  className="p-1 rounded text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)] disabled:opacity-50 transition-colors cursor-pointer"
                 >
                   <HiChevronRight className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                   disabled={!table.getCanNextPage()}
-                  className="p-1 rounded text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50"
+                  className="p-1 rounded text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)] disabled:opacity-50 transition-colors cursor-pointer"
                 >
                   <HiChevronDoubleRight className="w-5 h-5" />
                 </button>

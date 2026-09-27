@@ -4,6 +4,9 @@ const { createSubmission, getSubmissions, getSubmission, gradeProjectSubmission 
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/role');
 const upload = require('../middleware/upload');
+const reviewRoutes = require('./reviewRoutes');
+
+router.use('/:submissionId/reviews', reviewRoutes);
 
 router.use(auth);
 

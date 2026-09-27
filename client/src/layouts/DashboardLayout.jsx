@@ -33,8 +33,6 @@ const navItems = [
   { label: 'Submissions', icon: HiOutlineCloudUpload, path: '/submissions', roles: ['faculty', 'student'] },
   { label: 'Projects', icon: HiOutlineClipboardList, path: '/projects', roles: ['faculty', 'student'] },
   { label: 'Collaboration', icon: HiOutlineUserGroup, path: '/collaboration', roles: ['admin', 'faculty', 'student'] },
-  { label: 'Playground', icon: HiOutlineTerminal, path: '/playground', roles: ['student'] },
-  { label: 'Leaderboard', icon: HiOutlineStar, path: '/leaderboard', roles: ['faculty', 'student'] },
   { label: 'Plagiarism', icon: HiOutlineShieldCheck, path: '/plagiarism', roles: ['admin', 'faculty'] },
   { label: 'Analytics', icon: HiOutlineChartBar, path: '/analytics', roles: ['admin', 'faculty'] },
   { label: 'Reports', icon: HiOutlineDocumentReport, path: '/reports', roles: ['admin', 'faculty', 'student'] },
@@ -109,7 +107,7 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="flex h-screen overflow-hidden text-[var(--color-text-primary)] transition-colors duration-300">
       
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
@@ -132,7 +130,7 @@ const DashboardLayout = () => {
           x: mobileSidebarOpen ? 0 : (window.innerWidth < 1024 ? -260 : 0)
         }}
         transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-        className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col glass border-r border-slate-200/50 dark:border-slate-800/50 backdrop-blur-xl shadow-xl lg:shadow-none`}
+        className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col glass-panel lg:rounded-none lg:border-y-0 lg:border-l-0 lg:shadow-none backdrop-blur-xl shadow-xl transition-all duration-300`}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200/50 dark:border-slate-800/50">
           <AnimatePresence mode="wait">
@@ -146,7 +144,7 @@ const DashboardLayout = () => {
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg" style={{ background: 'var(--gradient-brand)', boxShadow: '0 4px 14px -4px var(--color-brand)' }}>
                   <span className="text-white font-bold text-sm">D</span>
                 </div>
-                <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors">
+                <span className="text-xl font-bold tracking-tight text-[var(--color-text-primary)] group-hover:text-indigo-500 transition-colors">
                   D's
                 </span>
               </motion.div>
@@ -178,22 +176,22 @@ const DashboardLayout = () => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileSidebarOpen(false)}
-                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group overflow-hidden ${
+                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group overflow-hidden ${
                   isActive 
-                    ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 shadow-sm' 
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200'
+                    ? 'text-[var(--color-text-primary)] bg-[var(--color-bg-hover)] shadow-xs font-medium' 
+                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]'
                 }`}
                 title={!sidebarOpen ? item.label : undefined}
               >
                 {isActive && (
                   <motion.div 
                     layoutId="activeNavIndicator"
-                    className="absolute inset-0 bg-indigo-500/10 dark:bg-indigo-500/20 border-l-4 border-indigo-500 z-0"
+                    className="absolute inset-0 border-l-2 border-[var(--color-text-primary)] z-0"
                     initial={false}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
-                <Icon className={`w-5 h-5 shrink-0 z-10 transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-400' : ''}`} />
+                <Icon className={`w-5 h-5 shrink-0 z-10 transition-colors ${isActive ? 'text-[var(--color-text-primary)]' : ''}`} />
                 <AnimatePresence>
                   {sidebarOpen && (
                     <motion.span
@@ -212,7 +210,7 @@ const DashboardLayout = () => {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-200/50 dark:border-slate-800/50">
+        <div className="p-4 border-t border-[var(--color-border)]">
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors group"
@@ -235,7 +233,7 @@ const DashboardLayout = () => {
       </motion.aside>
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <header className="relative z-10 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 glass border-b border-slate-200/50 dark:border-slate-800/50">
+        <header className="relative z-10 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 glass-panel rounded-none border-x-0 border-t-0 shadow-xs">
           
           <div className="flex items-center gap-4 flex-1">
             <button
@@ -246,37 +244,44 @@ const DashboardLayout = () => {
             </button>
             
             <div className="hidden sm:block">
-              <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+              <h2 className="text-sm font-semibold text-[var(--color-text-secondary)]">
                 {getGreeting()},
               </h2>
-              <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
+              <h1 className="text-lg font-bold text-[var(--color-text-primary)] leading-tight">
                 {user?.name || 'User'}
               </h1>
             </div>
 
             <div className="hidden md:flex flex-1 max-w-md ml-8 relative group">
-              <div className={`absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl blur transition-opacity duration-300 ${searchFocused ? 'opacity-30' : 'opacity-0 group-hover:opacity-10'}`}></div>
+              <div className={`absolute inset-0 rounded-lg blur transition-opacity duration-300 ${searchFocused ? 'opacity-20' : 'opacity-0'}`} style={{background: 'var(--color-text-primary)'}}></div>
               <div className="relative flex items-center w-full">
-                <HiOutlineSearch className={`absolute left-3 w-5 h-5 transition-colors ${searchFocused ? 'text-indigo-500' : 'text-slate-400'}`} />
+                <HiOutlineSearch className={`absolute left-3 w-5 h-5 transition-colors ${searchFocused ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'}`} />
                 <input
                   type="text"
                   placeholder="Search assignments, students, or reports..."
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
-                  className="w-full pl-10 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 backdrop-blur-sm transition-all"
+                  className="input-field w-full pl-10 pr-4 py-1.5"
                 />
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 ml-4">
-            <div className="hidden">
-               {/* Theme toggle disabled as per light mode requirement */}
-            </div>
+            <button
+              onClick={toggleTheme}
+              className="relative p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] transition-colors group"
+            >
+              {theme === 'dark' ? (
+                <HiOutlineSun className="w-5 h-5 group-hover:text-amber-500 transition-colors" />
+              ) : (
+                <HiOutlineMoon className="w-5 h-5 group-hover:text-indigo-500 transition-colors" />
+              )}
+            </button>
 
             <button
               onClick={() => navigate('/notifications')}
-              className="relative p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+              className="relative p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] transition-colors group"
             >
               <HiOutlineBell className="w-5 h-5 group-hover:text-indigo-500 transition-colors" />
               {unreadCount > 0 && (
@@ -286,18 +291,16 @@ const DashboardLayout = () => {
 
             <button
               onClick={() => navigate('/profile')}
-              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer"
+              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg border border-transparent hover:border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] transition-all cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5">
-                <div className="w-full h-full bg-white dark:bg-slate-900 rounded-md flex items-center justify-center">
-                  <span className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-br from-indigo-500 to-purple-500 uppercase">
-                    {user?.name?.substring(0, 2) || 'UN'}
-                  </span>
-                </div>
+              <div className="w-8 h-8 rounded-md bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] flex items-center justify-center">
+                <span className="text-xs font-bold uppercase">
+                  {user?.name?.substring(0, 2) || 'UN'}
+                </span>
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 leading-none">{user?.name?.split(' ')[0]}</p>
-                <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
+                <p className="text-sm font-semibold text-[var(--color-text-primary)] leading-none">{user?.name?.split(' ')[0]}</p>
+                <p className="text-xs text-[var(--color-text-muted)] capitalize">{user?.role}</p>
               </div>
             </button>
           </div>
@@ -307,10 +310,10 @@ const DashboardLayout = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, scale: 0.98, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, scale: 0.98, filter: 'blur(4px)' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              initial={{ opacity: 0, y: 20, scale: 0.98, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -20, scale: 1.02, filter: 'blur(4px)' }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="h-full"
             >
               <Outlet />

@@ -89,8 +89,29 @@ const checkPlagiarism = async (req, res, next) => {
           link: `/plagiarism`,
         });
 
+        // Notify student 1
+        const notifS1 = await Notification.create({
+          user: result.student1Id,
+          title: 'Plagiarism Warning',
+          message: `High similarity (${result.similarityScore}%) detected in your submission for "${assignment.title}".`,
+          type: 'plagiarism',
+          link: `/assignments/${assignment._id}`,
+        });
+
+        // Notify student 2
+        const notifS2 = await Notification.create({
+          user: result.student2Id,
+          title: 'Plagiarism Warning',
+          message: `High similarity (${result.similarityScore}%) detected in your submission for "${assignment.title}".`,
+          type: 'plagiarism',
+          link: `/assignments/${assignment._id}`,
+        });
+
         try {
           socket.getIO().to(String(req.user.id)).emit('notification:new', notif);
+          socket.getIO().to(String(result.student1Id)).emit('notification:new', notifS1);
+          socket.getIO().to(String(result.student2Id)).emit('notification:new', notifS2);
+          
           socket.getIO().to('faculty').emit('plagiarism:detected', {
             assignmentId: assignment._id,
             score: result.similarityScore

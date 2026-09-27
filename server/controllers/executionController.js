@@ -5,8 +5,9 @@ const Assignment = require('../models/Assignment');
 const Notification = require('../models/Notification');
 const Challenge = require('../models/Challenge');
 const User = require('../models/User');
+const CodeRun = require('../models/CodeRun');
 const socket = require('../socket');
-const { executeInDocker } = require('../services/executionService');
+const { executeInDocker, executeUnitTest } = require('../services/executionService');
 
 /**
  * @route   POST /api/execute/:submissionId
@@ -53,117 +54,149 @@ const executeSubmission = async (req, res, next) => {
     }
 
     const code = mainFile.content;
+
     let totalPassed = 0;
-    let totalWeight = 0;
     let earnedWeight = 0;
+    let totalWeight = 0;
     const results = [];
 
-    // Execute against each test case
-    for (const tc of testCases) {
-      const result = await executeInDocker(
-        code,
-        submission.language,
-        tc.input,
-        tc.timeLimit,
-        tc.memoryLimit
-      );
-
-      // Compare output (trim whitespace for comparison)
-      const actualOutput = result.output.trim();
-      const expectedOutput = tc.expectedOutput.trim();
-      const passed = actualOutput === expectedOutput;
-
-      if (passed) {
-        totalPassed++;
-        earnedWeight += tc.weight;
-      }
-      totalWeight += tc.weight;
-
-      // Save execution result
-      const execResult = await ExecutionResult.findOneAndUpdate(
-        { submission: submission._id, testCase: tc._id },
+    // Check if Unit Testing Framework is used
+    if (assignment.testFramework && assignment.testFramework !== 'none') {
+      const result = await executeUnitTest(code, submission.language, assignment.unitTestCode, assignment.testFramework);
+      
+      const isPassed = result.exitCode === 0;
+      totalPassed = result.testsPassed || (isPassed ? 1 : 0);
+      const total = result.totalTests || 1;
+      
+      // Save a single ExecutionResult for the unit test
+      await ExecutionResult.findOneAndUpdate(
+        { submission: submission._id, testCase: null },
         {
           submission: submission._id,
-          testCase: tc._id,
-          actualOutput,
-          expectedOutput,
-          passed,
+          testCase: null,
+          actualOutput: result.output,
+          expectedOutput: `All ${total} tests passed.`,
+          passed: isPassed,
           executionTime: result.executionTime,
           memoryUsed: result.memoryUsed,
           error: result.error,
           exitCode: result.exitCode,
-          status: result.status,
+          status: result.status
         },
         { upsert: true, new: true }
       );
+      
+      earnedWeight = totalPassed;
+      totalWeight = total;
+      results.push(result);
+    } else {
+      // Standard I/O Test Cases Execution
+      for (const tc of testCases) {
+        const result = await executeInDocker(
+          code,
+          submission.language,
+          tc.input,
+          tc.timeLimit || 5000,
+          tc.memoryLimit || 256
+        );
 
-      results.push(execResult);
+        const actualOutput = result.output ? result.output.trim() : '';
+        const expectedOutput = tc.expectedOutput ? tc.expectedOutput.trim() : '';
+        const isPassed = !result.error && result.exitCode === 0 && actualOutput === expectedOutput;
+
+        if (isPassed) {
+          totalPassed++;
+          earnedWeight += tc.weight || 1;
+        }
+        totalWeight += tc.weight || 1;
+
+        // Save ExecutionResult for each testcase
+        await ExecutionResult.findOneAndUpdate(
+          { submission: submission._id, testCase: tc._id },
+          {
+            submission: submission._id,
+            testCase: tc._id,
+            actualOutput,
+            expectedOutput,
+            passed: isPassed,
+            executionTime: result.executionTime,
+            memoryUsed: result.memoryUsed,
+            error: result.error || (result.exitCode !== 0 ? `Exit code ${result.exitCode}` : null),
+            exitCode: result.exitCode || 0,
+            status: isPassed ? 'completed' : 'error'
+          },
+          { upsert: true, new: true }
+        );
+        results.push(result);
+      }
     }
 
-    // Calculate marks
+    // Calculate Marks
     const scorePercentage = totalWeight > 0 ? (earnedWeight / totalWeight) : 0;
     const marks = Math.round(scorePercentage * assignment.maxMarks);
+    const hasError = results.some(r => r.status === 'error');
+    
+    let runStatus = 'Accepted';
+    if (hasError) runStatus = 'Error';
+    else if (totalPassed < testCases.length) runStatus = 'Wrong Answer';
 
-    // Update submission
-    submission.status = 'evaluated';
-    submission.marks = marks;
-    submission.maxMarks = assignment.maxMarks;
-    submission.testCasesPassed = totalPassed;
-    submission.totalTestCases = testCases.length;
-    submission.evaluatedAt = new Date();
-    submission.feedback = `Passed ${totalPassed}/${testCases.length} test cases. Score: ${marks}/${assignment.maxMarks}`;
-    await submission.save();
+    // Log the run
+    await CodeRun.create({
+      student: submission.student._id,
+      assignment: assignment._id,
+      type: 'submit',
+      status: runStatus,
+      language: submission.language,
+      testCasesPassed: totalPassed,
+      totalTestCases: testCases.length
+    });
 
-    // Create notification for student
+    // Run Static Analysis (Code Quality)
+    const staticAnalysisService = require('../services/staticAnalysisService');
+    await staticAnalysisService.analyzeSubmission(submission._id);
+
+    // Fetch the updated submission since staticAnalysisService modified it
+    const updatedSubmission = await Submission.findById(submission._id);
+
+    // Update Submission details from execution
+    updatedSubmission.status = 'evaluated';
+    updatedSubmission.marks = marks;
+    updatedSubmission.maxMarks = assignment.maxMarks;
+    updatedSubmission.testCasesPassed = totalPassed;
+    updatedSubmission.totalTestCases = testCases.length;
+    updatedSubmission.evaluatedAt = new Date();
+    updatedSubmission.feedback = `Passed ${totalPassed}/${testCases.length} test cases. Score: ${marks}/${assignment.maxMarks}`;
+    await updatedSubmission.save();
+
+    // Create Notification
     const notif = await Notification.create({
-      user: submission.student._id || submission.student,
+      user: submission.student._id,
       title: 'Submission Evaluated',
-      message: `Your submission for "${assignment.title}" has been evaluated. Score: ${marks}/${assignment.maxMarks}`,
+      message: `Your submission has been evaluated. Score: ${marks}/${assignment.maxMarks}`,
       type: 'result',
       link: `/submissions/${submission._id}`,
     });
 
     try {
-      socket.getIO().to(String(submission.student._id || submission.student)).emit('notification:new', notif);
-      socket.getIO().to(String(submission.student._id || submission.student)).emit('submission:evaluated', {
+      socket.getIO().to(String(submission.student._id)).emit('notification:new', notif);
+      socket.getIO().to(String(submission.student._id)).emit('submission:evaluated', {
         submissionId: submission._id,
         status: 'evaluated',
         marks,
+        codeQualityScore: updatedSubmission.codeQualityScore
       });
-      // Emit global update for dashboards
       socket.getIO().emit('dashboard:update');
     } catch (err) {
-      console.log('Socket not initialized or emit failed:', err.message);
+      console.log('Socket emit failed:', err.message);
     }
-
-    // Filter results if student
-    const filteredResults = req.user.role === 'student' ? results.map(r => {
-      if (r.testCase && r.testCase.isHidden) {
-        return {
-          ...r.toObject ? r.toObject() : r,
-          testCase: {
-            ...r.testCase.toObject ? r.testCase.toObject() : r.testCase,
-            expectedOutput: undefined,
-            input: undefined,
-          },
-          actualOutput: undefined,
-          error: undefined
-        };
-      }
-      return r;
-    }) : results;
 
     res.json({
       success: true,
-      message: `Execution complete. ${totalPassed}/${testCases.length} test cases passed.`,
-      results: filteredResults,
+      message: 'Submission evaluated successfully.',
       submission: {
         id: submission._id,
-        marks,
-        maxMarks: assignment.maxMarks,
-        testCasesPassed: totalPassed,
-        totalTestCases: testCases.length,
-        status: submission.status,
+        status: 'evaluated',
+        marks
       },
     });
   } catch (error) {
@@ -313,6 +346,23 @@ const executePublicTestCases = async (req, res, next) => {
         executionTime: result.executionTime,
         memoryUsed: result.memoryUsed,
         error: result.error || (result.exitCode !== 0 ? `Process exited with code ${result.exitCode}` : null),
+      });
+    }
+
+    let runStatus = 'Accepted';
+    if (results.some(r => r.error)) runStatus = 'Error';
+    else if (totalPassed < testCases.length) runStatus = 'Wrong Answer';
+
+    // Log the run for the logged-in user if available
+    if (req.user) {
+      await CodeRun.create({
+        student: req.user.id,
+        assignment: assignment._id,
+        type: 'run',
+        status: runStatus,
+        language,
+        testCasesPassed: totalPassed,
+        totalTestCases: testCases.length
       });
     }
 

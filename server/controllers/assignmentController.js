@@ -1,6 +1,7 @@
 const Assignment = require('../models/Assignment');
 const TestCase = require('../models/TestCase');
 const Submission = require('../models/Submission');
+const CodeRun = require('../models/CodeRun');
 const { getIO } = require('../socket');
 const { logAction } = require('../services/auditService');
 
@@ -339,6 +340,27 @@ const deleteTestCase = async (req, res, next) => {
   }
 };
 
+/**
+ * @route   GET /api/assignments/:id/history
+ * @desc    Get execution history (runs and submits) for the current user
+ * @access  Private
+ */
+const getAssignmentHistory = async (req, res, next) => {
+  try {
+    const history = await CodeRun.find({
+      assignment: req.params.id,
+      student: req.user.id
+    }).sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      history
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAssignments,
   getAssignment,
@@ -348,4 +370,5 @@ module.exports = {
   addTestCase,
   updateTestCase,
   deleteTestCase,
+  getAssignmentHistory
 };

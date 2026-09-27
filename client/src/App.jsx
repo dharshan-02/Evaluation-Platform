@@ -1,6 +1,6 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Layouts
 import DashboardLayout from './layouts/DashboardLayout';
@@ -12,8 +12,6 @@ import LoginPage from './pages/LoginPage';
 
 // Dashboard
 import DashboardPage from './pages/DashboardPage';
-import PlaygroundPage from './pages/PlaygroundPage';
-import LeaderboardPage from './pages/LeaderboardPage';
 
 // Assignment Pages
 import AssignmentsPage from './pages/AssignmentsPage';
@@ -75,6 +73,7 @@ const ProtectedRoute = ({ children, roles }) => {
 
 function App() {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   // Theme is handled by ThemeProvider in main.jsx
 
@@ -177,108 +176,105 @@ function App() {
   }
 
   return (
-    <div className="mesh-bg text-slate-900 dark:text-slate-100 min-h-screen">
-      <Routes>
-        {/* Auth Routes */}
-        <Route element={<AuthLayout />}>
-          <Route path="/login" element={
-            user ? <Navigate to="/dashboard" replace /> : <LoginPage />
-          } />
+    <div className="mesh-bg bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] min-h-screen transition-colors duration-700 ease-in-out">
+        <Routes location={location}>
+          {/* Auth Routes */}
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={
+              user ? <Navigate to="/dashboard" replace /> : <LoginPage />
+            } />
+          </Route>
 
-        </Route>
+          {/* Protected Dashboard Routes */}
+          <Route path="/" element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="profile" element={<ProfilePage />} />
 
-        {/* Protected Dashboard Routes */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="playground" element={<PlaygroundPage />} />
-          <Route path="leaderboard" element={<LeaderboardPage />} />
-          <Route path="profile" element={<ProfilePage />} />
+            {/* Assignment Routes */}
+            <Route path="assignments" element={<AssignmentsPage />} />
+            <Route path="assignments/new" element={
+              <ProtectedRoute roles={['admin', 'faculty']}>
+                <CreateAssignmentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="assignments/:id" element={<AssignmentDetailsPage />} />
 
-          {/* Assignment Routes */}
-          <Route path="assignments" element={<AssignmentsPage />} />
-          <Route path="assignments/new" element={
-            <ProtectedRoute roles={['admin', 'faculty']}>
-              <CreateAssignmentPage />
-            </ProtectedRoute>
-          } />
-          <Route path="assignments/:id" element={<AssignmentDetailsPage />} />
+            {/* Submission Routes */}
+            <Route path="submissions" element={<SubmissionsPage />} />
+            <Route path="submissions/:id" element={<SubmissionDetailsPage />} />
 
-          {/* Submission Routes */}
-          <Route path="submissions" element={<SubmissionsPage />} />
-          <Route path="submissions/:id" element={<SubmissionDetailsPage />} />
+            {/* Project Routes */}
+            <Route path="projects" element={<ProjectsPage />} />
+            <Route path="projects/new" element={
+              <ProtectedRoute roles={['admin', 'faculty', 'student']}>
+                <CreateProjectPage />
+              </ProtectedRoute>
+            } />
+            <Route path="projects/:id" element={<ProjectDetailsPage />} />
+            <Route path="projects/:id/collaborate" element={
+              <ProtectedRoute roles={['admin', 'faculty', 'student']}>
+                <CollaborationPage />
+              </ProtectedRoute>
+            } />
 
-          {/* Project Routes */}
-          <Route path="projects" element={<ProjectsPage />} />
-          <Route path="projects/new" element={
-            <ProtectedRoute roles={['admin', 'faculty', 'student']}>
-              <CreateProjectPage />
-            </ProtectedRoute>
-          } />
-          <Route path="projects/:id" element={<ProjectDetailsPage />} />
-          <Route path="projects/:id/collaborate" element={
-            <ProtectedRoute roles={['admin', 'faculty', 'student']}>
-              <CollaborationPage />
-            </ProtectedRoute>
-          } />
+            {/* Ad-Hoc Collaboration Hub */}
+            <Route path="collaboration" element={
+              <ProtectedRoute roles={['admin', 'faculty', 'student']}>
+                <CollaborationHubPage />
+              </ProtectedRoute>
+            } />
+            <Route path="collaboration/:id" element={
+              <ProtectedRoute roles={['admin', 'faculty', 'student']}>
+                <CollaborationPage />
+              </ProtectedRoute>
+            } />
 
-          {/* Ad-Hoc Collaboration Hub */}
-          <Route path="collaboration" element={
-            <ProtectedRoute roles={['admin', 'faculty', 'student']}>
-              <CollaborationHubPage />
-            </ProtectedRoute>
-          } />
-          <Route path="collaboration/:id" element={
-            <ProtectedRoute roles={['admin', 'faculty', 'student']}>
-              <CollaborationPage />
-            </ProtectedRoute>
-          } />
+            {/* Plagiarism & Analytics Routes */}
+            <Route path="plagiarism" element={
+              <ProtectedRoute roles={['admin', 'faculty']}>
+                <PlagiarismPage />
+              </ProtectedRoute>
+            } />
+            <Route path="analytics" element={
+              <ProtectedRoute roles={['admin', 'faculty']}>
+                <AnalyticsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="reports" element={
+              <ProtectedRoute roles={['admin', 'faculty', 'student']}>
+                <ReportsPage />
+              </ProtectedRoute>
+            } />
 
-          {/* Plagiarism & Analytics Routes */}
-          <Route path="plagiarism" element={
-            <ProtectedRoute roles={['admin', 'faculty']}>
-              <PlagiarismPage />
-            </ProtectedRoute>
-          } />
-          <Route path="analytics" element={
-            <ProtectedRoute roles={['admin', 'faculty']}>
-              <AnalyticsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="reports" element={
-            <ProtectedRoute roles={['admin', 'faculty', 'student']}>
-              <ReportsPage />
-            </ProtectedRoute>
-          } />
+            {/* Notifications */}
+            <Route path="notifications" element={<NotificationsPage />} />
 
-          {/* Notifications */}
-          <Route path="notifications" element={<NotificationsPage />} />
+            {/* Admin Routes */}
+            <Route path="users" element={
+              <ProtectedRoute roles={['admin']}>
+                <UsersPage />
+              </ProtectedRoute>
+            } />
+            <Route path="settings" element={
+              <ProtectedRoute roles={['admin']}>
+                <SettingsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="audit-logs" element={
+              <ProtectedRoute roles={['admin']}>
+                <AuditLogsPage />
+              </ProtectedRoute>
+            } />
+          </Route>
 
-          {/* Admin Routes */}
-          <Route path="users" element={
-            <ProtectedRoute roles={['admin']}>
-              <UsersPage />
-            </ProtectedRoute>
-          } />
-          <Route path="settings" element={
-            <ProtectedRoute roles={['admin']}>
-              <SettingsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="audit-logs" element={
-            <ProtectedRoute roles={['admin']}>
-              <AuditLogsPage />
-            </ProtectedRoute>
-          } />
-        </Route>
-
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+          {/* Catch-all redirect */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
 
       {user && <CommandPalette />}
     </div>

@@ -35,35 +35,43 @@ const itemVariants = {
 const StatsCard = ({ icon: Icon, label, value, gradient, accentColor }) => (
   <motion.div
     variants={itemVariants}
-    className="relative overflow-hidden rounded-2xl p-5 glass group transition-all duration-300"
-    whileHover={{ y: -4, scale: 1.02 }}
+    className="relative overflow-hidden rounded-2xl p-6 glass-panel group cursor-pointer transition-all duration-500 hover:shadow-xl hover:-translate-y-2"
   >
-    {/* Gradient accent bar */}
-    <div
-      className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl opacity-70 group-hover:opacity-100 transition-opacity"
+    {/* Dynamic Background Glow on Hover */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileHover={{ opacity: 0.15 }}
+      transition={{ duration: 0.3 }}
+      className="absolute inset-0 z-0"
       style={{ background: gradient }}
     />
     
-    {/* Ambient Glow */}
+    {/* Aurora Border Top */}
+    <div
+      className="absolute top-0 left-0 right-0 h-[2px] opacity-50 group-hover:opacity-100 group-hover:h-1 transition-all duration-300"
+      style={{ background: gradient, boxShadow: `0 0 15px ${accentColor}` }}
+    />
+    
+    {/* Ambient Glow Orb */}
     <div 
-      className="absolute -top-10 -right-10 w-24 h-24 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"
-      style={{ background: gradient }}
+      className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-20 group-hover:opacity-60 transition-opacity duration-500 group-hover:scale-150"
+      style={{ background: accentColor }}
     />
 
     <div className="flex items-center justify-between relative z-10">
-      <div>
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+      <div className="space-y-1">
+        <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] transition-colors">
           {label}
         </p>
-        <p className="text-3xl font-bold mt-1 text-slate-900 dark:text-white">
+        <p className="text-4xl font-black text-[var(--color-text-primary)] tracking-tight">
           {value}
         </p>
       </div>
       <div
-        className="w-12 h-12 rounded-xl flex items-center justify-center shadow-inner relative overflow-hidden"
+        className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3"
       >
-        <div className="absolute inset-0 opacity-20" style={{ background: accentColor }}></div>
-        <Icon className="w-6 h-6 relative z-10" style={{ color: accentColor }} />
+        <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity" style={{ background: accentColor }}></div>
+        <Icon className="w-7 h-7 relative z-10 transition-colors" style={{ color: accentColor }} />
       </div>
     </div>
   </motion.div>
@@ -83,14 +91,14 @@ const StudentDashboard = ({ data }) => {
       {/* Action Bar */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2 tracking-tight">
             <HiOutlineAcademicCap className="w-6 h-6 text-indigo-500" />
             My Progress
           </h2>
         </div>
         <button
           onClick={handleDownloadTranscript}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold rounded-lg shadow-sm shadow-indigo-500/20 transition-all hover:-translate-y-0.5"
+          className="btn-primary flex items-center gap-2 shadow-xs"
         >
           <HiOutlineDownload className="w-5 h-5" />
           Download Transcript
@@ -134,67 +142,68 @@ const StudentDashboard = ({ data }) => {
       {/* Recent Submissions */}
       <motion.div
         variants={itemVariants}
-        className="rounded-2xl p-6 glass transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+        className="rounded-2xl p-6 glass-panel transition-all duration-300"
       >
-        <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">
+        <h3 className="text-lg font-bold tracking-tight mb-4 text-[var(--color-text-primary)]">
           Recent Submissions
         </h3>
         <div className="space-y-3">
           {data?.recentSubmissions?.length > 0 ? data.recentSubmissions.map((item, i) => (
             <div
               key={i}
-              className="flex flex-col gap-2 p-4 rounded-xl transition-all duration-200 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-              style={{ background: 'var(--color-bg-elevated)' }}
+              className="group relative overflow-hidden flex flex-col gap-2 p-4 rounded-xl transition-all duration-300 border border-[var(--color-border)] hover:border-indigo-500/30 hover:shadow-md bg-[var(--color-bg-elevated)]"
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/0 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate pr-4">{item.name}</p>
-                <span className="text-sm font-bold text-slate-900 dark:text-white shrink-0">{item.score}</span>
+                <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate pr-4">{item.name}</p>
+                <span className="text-sm font-bold text-[var(--color-text-primary)] shrink-0">{item.score}</span>
               </div>
               <div className="flex items-center gap-1.5 mt-2">
                 {/* Step 1: Submitted */}
                 <div className="flex-1 h-1.5 rounded-full bg-emerald-500"></div>
                 {/* Step 2: Executing/Pending */}
-                <div className={`flex-1 h-1.5 rounded-full ${item.status === 'Evaluated' || item.status === 'Executing' ? (item.status === 'Evaluated' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse') : 'bg-slate-200 dark:bg-slate-700'}`}></div>
+                <div className={`flex-1 h-1.5 rounded-full ${item.status === 'Evaluated' || item.status === 'Executing' ? (item.status === 'Evaluated' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse') : 'bg-[var(--color-border)]'}`}></div>
                 {/* Step 3: Evaluated */}
-                <div className={`flex-1 h-1.5 rounded-full ${item.status === 'Evaluated' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
+                <div className={`flex-1 h-1.5 rounded-full ${item.status === 'Evaluated' ? 'bg-emerald-500' : 'bg-[var(--color-border)]'}`}></div>
               </div>
-              <div className="flex justify-between text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-1">
+              <div className="flex justify-between text-[10px] text-[var(--color-text-muted)] font-medium uppercase tracking-widest mt-1">
                 <span>Submitted</span>
                 <span className="text-center">Reviewing</span>
                 <span className="text-right">Graded</span>
               </div>
             </div>
-          )) : <p className="text-sm text-slate-500">No recent submissions found.</p>}
+          )) : <p className="text-sm text-[var(--color-text-secondary)]">No recent submissions found.</p>}
         </div>
       </motion.div>
 
       {/* Upcoming Deadlines */}
       <motion.div
         variants={itemVariants}
-        className="rounded-2xl p-6 glass transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+        className="rounded-2xl p-6 glass-panel transition-all duration-300"
       >
-        <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">
+        <h3 className="text-lg font-bold tracking-tight mb-4 text-[var(--color-text-primary)]">
           Upcoming Deadlines
         </h3>
         <div className="space-y-3">
           {data?.upcomingDeadlines?.length > 0 ? data.upcomingDeadlines.map((item, i) => (
             <div
               key={i}
-              className="flex items-center justify-between p-3 rounded-xl"
-              style={{ background: 'var(--color-bg-elevated)' }}
+              className="group relative overflow-hidden flex items-center justify-between p-3 rounded-xl border border-[var(--color-border)] hover:border-indigo-500/30 hover:shadow-md transition-all duration-300 bg-[var(--color-bg-elevated)]"
             >
-              <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{item.name}</p>
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/0 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>{item.name}</p>
               <span
-                className="text-xs font-medium px-2.5 py-1 rounded-full"
+                className="text-xs font-bold px-2.5 py-1 rounded-full border"
                 style={{
                   background: item.urgent ? 'var(--color-rose-bg)' : 'var(--color-bg-hover)',
                   color: item.urgent ? 'var(--color-rose)' : 'var(--color-text-secondary)',
+                  borderColor: item.urgent ? 'var(--color-rose-bg)' : 'var(--color-border)'
                 }}
               >
                 {item.due}
               </span>
             </div>
-          )) : <p className="text-sm text-slate-500">No upcoming deadlines.</p>}
+          )) : <p className="text-sm text-[var(--color-text-secondary)]">No upcoming deadlines.</p>}
         </div>
       </motion.div>
     </div>
@@ -242,9 +251,9 @@ const FacultyDashboard = ({ data }) => (
       {/* Pending Reviews */}
       <motion.div
         variants={itemVariants}
-        className="rounded-2xl p-6 glass transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+        className="rounded-2xl p-6 glass-panel transition-all duration-300"
       >
-        <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">
+        <h3 className="text-lg font-bold tracking-tight mb-4 text-[var(--color-text-primary)]">
           Recent Submissions
         </h3>
         <div className="space-y-3">
@@ -272,9 +281,9 @@ const FacultyDashboard = ({ data }) => (
       {/* Class Performance */}
       <motion.div
         variants={itemVariants}
-        className="rounded-2xl p-6 glass transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+        className="rounded-2xl p-6 glass-panel transition-all duration-300"
       >
-        <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">
+        <h3 className="text-lg font-bold tracking-tight mb-4 text-[var(--color-text-primary)]">
           Class Performance (Avg)
         </h3>
         <div className="space-y-4">
@@ -341,18 +350,18 @@ const AdminDashboard = ({ data }) => (
       {/* System Health / Recent Submissions */}
       <motion.div
         variants={itemVariants}
-        className="rounded-2xl p-6 glass transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+        className="rounded-2xl p-6 glass-panel transition-all duration-300"
       >
-        <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">
+        <h3 className="text-lg font-bold tracking-tight mb-4 text-[var(--color-text-primary)]">
           Recent Global Submissions
         </h3>
         <div className="space-y-3">
           {data?.recentSubmissions?.length > 0 ? data.recentSubmissions.map((item, i) => (
             <div
               key={i}
-              className="flex items-center justify-between p-3 rounded-xl transition-colors duration-200"
-              style={{ background: 'var(--color-bg-elevated)' }}
+              className="group relative overflow-hidden flex items-center justify-between p-3 rounded-xl border border-[var(--color-border)] hover:border-indigo-500/30 hover:shadow-md transition-all duration-300 bg-[var(--color-bg-elevated)]"
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/0 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               <div>
                 <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{item.student}</p>
                 <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{item.name}</p>
@@ -366,9 +375,9 @@ const AdminDashboard = ({ data }) => (
       {/* Upcoming Deadlines */}
       <motion.div
         variants={itemVariants}
-        className="rounded-2xl p-6 glass transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+        className="rounded-2xl p-6 glass-panel transition-all duration-300"
       >
-        <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">
+        <h3 className="text-lg font-bold tracking-tight mb-4 text-[var(--color-text-primary)]">
           Upcoming Platform Deadlines
         </h3>
         <div className="space-y-3">
@@ -430,10 +439,10 @@ const DashboardPage = () => {
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+          <h1 className="text-3xl font-black text-[var(--color-text-primary)] flex items-center gap-3 tracking-tight">
             Welcome back, {user?.name?.split(' ')[0] || 'User'} 👋
           </h1>
-          <p className="mt-1 text-slate-500 dark:text-slate-400">
+          <p className="mt-2 text-[var(--color-text-secondary)] font-medium">
             Here's what's happening with your projects today.
           </p>
         </div>
@@ -441,7 +450,10 @@ const DashboardPage = () => {
       
       {loading ? (
         <div className="flex justify-center items-center py-20">
-          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+          <div className="animate-pulse-subtle flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-[var(--color-border)] border-t-[var(--color-text-primary)] rounded-full animate-spin"></div>
+            <p className="mt-4 text-[var(--color-text-secondary)] font-medium tracking-wide">Loading dashboard...</p>
+          </div>
         </div>
       ) : (
         <>

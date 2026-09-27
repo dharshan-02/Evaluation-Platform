@@ -92,10 +92,10 @@ const UsersPage = () => {
 
   if (user?.role !== 'admin') {
     return (
-      <div className="glass p-8 text-center text-rose-500 rounded-2xl max-w-2xl mx-auto mt-10">
+      <div className="glass-panel p-8 text-center text-rose-500 max-w-2xl mx-auto mt-10 animate-fade-in">
         <HiOutlineExclamationCircle className="w-12 h-12 mx-auto mb-4" />
-        <h2 className="text-xl font-bold">Access Denied</h2>
-        <p>You do not have permission to view this page. Admin access required.</p>
+        <h2 className="text-xl font-bold tracking-tight">Access Denied</h2>
+        <p className="mt-2 text-rose-500/80 font-medium">You do not have permission to view this page. Admin access required.</p>
       </div>
     );
   }
@@ -109,36 +109,36 @@ const UsersPage = () => {
   });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div className="max-w-7xl mx-auto space-y-8 animate-fade-in pb-12">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <HiOutlineUsers className="w-6 h-6 text-indigo-500" />
+          <h1 className="text-3xl font-black text-[var(--color-text-primary)] flex items-center gap-3 tracking-tight">
+            <HiOutlineUsers className="w-8 h-8 text-indigo-500" />
             User Management
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm font-medium text-[var(--color-text-secondary)] mt-2">
             Manage students, faculty, and administrators across the platform.
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold transition-colors shadow-lg shadow-indigo-500/30"
+          className="btn-primary flex items-center gap-2"
         >
           <HiOutlinePlus className="w-5 h-5" />
           Add User
         </button>
       </div>
 
-      <div className="glass rounded-2xl p-6">
+      <div className="glass-panel p-6 shadow-xs">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <div className="relative w-full md:w-96">
-            <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] w-5 h-5" />
             <input
               type="text"
               placeholder="Search users by name, email, or ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              className="input-field w-full pl-10 pr-4 py-2.5 outline-none"
             />
           </div>
           
@@ -146,7 +146,7 @@ const UsersPage = () => {
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-sm font-medium w-full md:w-auto"
+              className="input-field px-4 py-2.5 outline-none font-bold text-sm w-full md:w-auto"
             >
               <option value="all">All Roles</option>
               <option value="student">Students</option>
@@ -170,9 +170,9 @@ const UsersPage = () => {
             <p>No users found matching your criteria.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-            <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-800 text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-700">
+          <div className="overflow-x-auto rounded-xl border border-[var(--color-border)]">
+            <table className="w-full text-left text-sm text-[var(--color-text-secondary)]">
+              <thead className="bg-[var(--color-bg-secondary)] text-[10px] uppercase text-[var(--color-text-muted)] font-black tracking-widest border-b border-[var(--color-border)]">
                 <tr>
                   <th className="px-6 py-4">User Details</th>
                   <th className="px-6 py-4">Role</th>
@@ -181,13 +181,13 @@ const UsersPage = () => {
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50">
+              <tbody className="divide-y divide-[var(--color-border)]">
                 {filteredUsers.map((u) => (
-                  <tr key={u._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <tr key={u._id} className="hover:bg-[var(--color-bg-hover)] transition-colors group">
                     <td className="px-6 py-4">
-                      <div className="font-bold text-slate-900 dark:text-white">{u.name}</div>
-                      <div className="text-xs text-slate-500">{u.email}</div>
-                      {u.studentId && <div className="text-xs text-slate-400 font-mono mt-1">ID: {u.studentId}</div>}
+                      <div className="font-bold text-[var(--color-text-primary)]">{u.name}</div>
+                      <div className="text-xs font-medium text-[var(--color-text-muted)] mt-0.5">{u.email}</div>
+                      {u.studentId && <div className="text-xs font-mono font-bold text-[var(--color-text-muted)] mt-1">ID: {u.studentId}</div>}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase ${

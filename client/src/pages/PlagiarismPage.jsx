@@ -108,44 +108,44 @@ const PlagiarismPage = () => {
 
   if (['student'].includes(user?.role)) {
     return (
-      <div className="glass p-8 text-center text-rose-500 rounded-2xl max-w-2xl mx-auto mt-10">
+      <div className="glass-panel p-8 text-center text-rose-500 max-w-2xl mx-auto mt-10 animate-fade-in">
         <HiOutlineExclamationCircle className="w-12 h-12 mx-auto mb-4" />
-        <h2 className="text-xl font-bold">Access Denied</h2>
-        <p>You do not have permission to view this page.</p>
+        <h2 className="text-xl font-bold tracking-tight">Access Denied</h2>
+        <p className="mt-2 text-rose-500/80 font-medium">You do not have permission to view this page.</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-8 animate-fade-in pb-12">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <HiOutlineDocumentDuplicate className="w-6 h-6 text-indigo-500" />
+        <h1 className="text-3xl font-black text-[var(--color-text-primary)] flex items-center gap-3 tracking-tight">
+          <HiOutlineDocumentDuplicate className="w-8 h-8 text-indigo-500" />
           Plagiarism Detection
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-sm font-medium text-[var(--color-text-secondary)] mt-2">
           Review plagiarism reports for Assignment Submissions and Project Documents.
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit">
+      <div className="flex space-x-1 p-1 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-xl w-fit">
         <button
           onClick={() => setActiveTab('assignments')}
-          className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+          className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${
             activeTab === 'assignments'
-              ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
+              ? 'bg-[var(--color-bg-primary)] text-indigo-500 shadow-xs'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]'
           }`}
         >
           Assignment Submissions
         </button>
         <button
           onClick={() => setActiveTab('projects')}
-          className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+          className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${
             activeTab === 'projects'
-              ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
+              ? 'bg-[var(--color-bg-primary)] text-indigo-500 shadow-xs'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]'
           }`}
         >
           Project Documents
@@ -155,8 +155,8 @@ const PlagiarismPage = () => {
       {activeTab === 'assignments' ? (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Assignment Selection */}
-        <div className="glass rounded-2xl p-6 h-[fit-content]">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-200 dark:border-slate-700/50 pb-3">
+        <div className="glass-panel p-6 h-[fit-content] shadow-xs">
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 border-b border-[var(--color-border)] pb-3">
             Select Assignment
           </h3>
           <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
@@ -172,25 +172,25 @@ const PlagiarismPage = () => {
                   className={`w-full text-left p-3 rounded-xl border transition-all ${
                     selectedAssignment === a._id 
                       ? 'border-indigo-500 bg-indigo-500/10' 
-                      : 'border-slate-200 dark:border-slate-700 hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      : 'border-[var(--color-border)] hover:border-indigo-500/50 hover:bg-[var(--color-bg-hover)]'
                   }`}
                 >
-                  <div className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1">{a.title}</div>
-                  <div className="text-xs text-slate-500 mt-1">{a.course} • {a.submissionCount || 0} Submissions</div>
+                  <div className="font-bold text-sm text-[var(--color-text-primary)] line-clamp-1">{a.title}</div>
+                  <div className="text-xs font-medium text-[var(--color-text-secondary)] mt-1">{a.course} • {a.submissionCount || 0} Submissions</div>
                 </button>
               ))
             )}
             {!loading && assignments.length === 0 && (
-              <div className="text-center py-6 text-slate-500 text-sm">No assignments found.</div>
+              <div className="text-center py-6 text-[var(--color-text-secondary)] text-sm font-medium">No assignments found.</div>
             )}
           </div>
         </div>
 
         {/* Right Column: Reports */}
-        <div className="lg:col-span-2 glass rounded-2xl p-6 min-h-[400px]">
+        <div className="lg:col-span-2 glass-panel p-6 min-h-[400px] shadow-xs">
           {!selectedAssignment ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400 py-20">
-              <HiOutlineDocumentDuplicate className="w-16 h-16 mb-4 opacity-50" />
+            <div className="flex flex-col items-center justify-center h-full text-[var(--color-text-secondary)] py-20 font-medium">
+              <HiOutlineDocumentDuplicate className="w-16 h-16 mb-4 opacity-50 text-indigo-500" />
               <p>Select an assignment to view or run plagiarism checks.</p>
             </div>
           ) : loading ? (
@@ -199,13 +199,13 @@ const PlagiarismPage = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 dark:border-slate-700/50 pb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--color-border)] pb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
                     {reportsData?.assignment?.title || 'Assignment Reports'}
                   </h2>
-                  <p className="text-sm text-slate-500 mt-1">
-                    {reportsData?.totalReports} pairs compared • <span className="text-rose-500 font-semibold">{reportsData?.flaggedCount} flagged</span>
+                  <p className="text-sm font-medium text-[var(--color-text-secondary)] mt-1">
+                    {reportsData?.totalReports} pairs compared • <span className="text-rose-500 font-bold">{reportsData?.flaggedCount} flagged</span>
                   </p>
                 </div>
                 <button
@@ -227,13 +227,13 @@ const PlagiarismPage = () => {
               </div>
 
               {error && (
-                <div className="p-3 bg-rose-500/10 text-rose-500 text-sm rounded-xl border border-rose-500/20">
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-sm font-medium rounded-xl border border-rose-500/20">
                   {error}
                 </div>
               )}
 
               {reportsData?.reports?.length === 0 ? (
-                <div className="text-center py-10 text-slate-500">
+                <div className="text-center py-10 text-[var(--color-text-secondary)] font-medium">
                   <HiOutlineCheckCircle className="w-12 h-12 mx-auto mb-3 text-emerald-500/50" />
                   <p>No plagiarism reports generated yet.</p>
                   <p className="text-xs mt-1">Click "Run Plagiarism Check" to compare submissions.</p>
@@ -241,24 +241,24 @@ const PlagiarismPage = () => {
               ) : (
                 <div className="space-y-4">
                   {reportsData?.reports?.map(report => (
-                    <div key={report._id} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-col sm:flex-row justify-between sm:items-center gap-4 transition-colors hover:border-indigo-500/30">
+                    <div key={report._id} className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex flex-col sm:flex-row justify-between sm:items-center gap-4 transition-colors hover:border-indigo-500/30">
                       <div className="flex-1">
                         <div className="flex items-center gap-4 mb-2">
                           <div className="flex-1">
-                            <div className="text-xs font-semibold text-slate-500 uppercase">Student 1</div>
-                            <div className="text-sm font-bold text-slate-900 dark:text-white">{report.student1?.name}</div>
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)]">Student 1</div>
+                            <div className="text-sm font-bold text-[var(--color-text-primary)]">{report.student1?.name}</div>
                           </div>
-                          <div className="text-slate-300 dark:text-slate-600 font-bold px-2">VS</div>
+                          <div className="text-[var(--color-text-muted)] font-black px-2 text-xs">VS</div>
                           <div className="flex-1">
-                            <div className="text-xs font-semibold text-slate-500 uppercase">Student 2</div>
-                            <div className="text-sm font-bold text-slate-900 dark:text-white">{report.student2?.name}</div>
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)]">Student 2</div>
+                            <div className="text-sm font-bold text-[var(--color-text-primary)]">{report.student2?.name}</div>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-6 sm:pl-6 sm:border-l border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-6 sm:pl-6 sm:border-l border-[var(--color-border)]">
                         <div className="text-center">
-                          <div className="text-xs font-semibold text-slate-500 uppercase mb-1">Similarity</div>
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] mb-1">Similarity</div>
                           <div className={`text-xl font-bold ${
                             report.similarityScore >= (reportsData.assignment?.threshold || 70) 
                               ? 'text-rose-500' 
@@ -270,7 +270,7 @@ const PlagiarismPage = () => {
                           </div>
                         </div>
                         {/* Detail view would go here if implemented, for now just an icon */}
-                        <button className="p-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
+                        <button className="p-2 rounded-lg bg-[var(--color-bg-hover)] text-[var(--color-text-secondary)] hover:text-indigo-500 transition-colors">
                           <HiOutlineEye className="w-5 h-5" />
                         </button>
                       </div>
@@ -284,10 +284,10 @@ const PlagiarismPage = () => {
       </div>
       ) : (
       /* Project Documents Tab */
-      <div className="glass rounded-2xl p-6 min-h-[400px]">
-        <div className="border-b border-slate-200 dark:border-slate-700/50 pb-4 mb-6">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Project Document Scans</h2>
-          <p className="text-sm text-slate-500 mt-1">
+      <div className="glass-panel p-6 min-h-[400px] shadow-xs">
+        <div className="border-b border-[var(--color-border)] pb-4 mb-6">
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Project Document Scans</h2>
+          <p className="text-sm font-medium text-[var(--color-text-secondary)] mt-1">
             Recent plagiarism checks performed on student project reports and presentations.
           </p>
         </div>
@@ -297,24 +297,24 @@ const PlagiarismPage = () => {
             <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
           </div>
         ) : projectReports.length === 0 ? (
-          <div className="text-center py-10 text-slate-500">
+          <div className="text-center py-10 text-[var(--color-text-secondary)] font-medium">
             <HiOutlineCheckCircle className="w-12 h-12 mx-auto mb-3 text-emerald-500/50" />
             <p>No project document plagiarism reports found.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {projectReports.map(report => (
-              <div key={report._id} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-col gap-4">
+              <div key={report._id} className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex flex-col gap-4">
                 
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-bold text-slate-900 dark:text-white">{report.project?.title || 'Unknown Project'}</h3>
-                    <p className="text-sm text-slate-500 mt-1">
-                      Student: <span className="font-semibold text-slate-700 dark:text-slate-300">{report.project?.student?.name || 'Unknown'}</span>
+                    <h3 className="font-bold text-[var(--color-text-primary)]">{report.project?.title || 'Unknown Project'}</h3>
+                    <p className="text-sm font-medium text-[var(--color-text-secondary)] mt-1">
+                      Student: <span className="font-bold text-[var(--color-text-primary)]">{report.project?.student?.name || 'Unknown'}</span>
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-semibold text-slate-500 uppercase mb-1">Similarity</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] mb-1">Similarity</div>
                     <div className="flex items-center justify-end gap-3">
                       <div className={`text-2xl font-bold ${
                         report.overallSimilarity >= 30 ? 'text-rose-500' : 'text-emerald-500'
@@ -323,7 +323,7 @@ const PlagiarismPage = () => {
                       </div>
                       <button 
                         onClick={() => downloadPlagiarismReport(report._id)} 
-                        className="p-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                        className="p-2 rounded-lg bg-[var(--color-bg-hover)] text-[var(--color-text-secondary)] hover:text-indigo-500 transition-colors"
                         title="Download PDF Report"
                       >
                         <HiOutlineDownload className="w-5 h-5" />
@@ -332,13 +332,13 @@ const PlagiarismPage = () => {
                   </div>
                 </div>
                 
-                <div className="flex justify-between items-center pt-3 border-t border-slate-200 dark:border-slate-700">
-                  <span className="text-xs font-semibold px-2 py-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-md">
+                <div className="flex justify-between items-center pt-3 border-t border-[var(--color-border)]">
+                  <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 bg-indigo-500/10 text-indigo-500 rounded border border-indigo-500/20">
                     {report.documentName === 'reportFile' ? 'Project Report' : 'Presentation'}
                   </span>
                   
                   {report.matches && report.matches.length > 0 && (
-                    <div className="text-xs text-rose-500 font-semibold bg-rose-100 dark:bg-rose-900/30 px-2 py-1 rounded-md">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-rose-500 bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/20">
                       {report.matches.length} matches found
                     </div>
                   )}

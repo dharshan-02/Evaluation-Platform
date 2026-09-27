@@ -249,21 +249,42 @@ function mergeRegions(regions) {
 // ======================= MAIN API =======================
 
 /**
+ * Normalize source code for AST-style structural comparison by removing
+ * variable names and values, leaving only the structural skeleton.
+ */
+function normalizeStructural(code, language) {
+  let structural = normalize(code, language);
+  // Replace all numbers with LITERAL
+  structural = structural.replace(/\b\d+\b/g, 'LITERAL');
+  // Replace standard identifiers with VAR, but keep keywords
+  const keywords = ['if', 'else', 'for', 'while', 'return', 'function', 'const', 'let', 'var', 'class', 'import', 'def', 'public', 'private', 'class', 'int', 'float', 'string', 'void'];
+  const keywordRegex = new RegExp(`\\b(?!${keywords.join('|')})\\b[a-zA-Z_][a-zA-Z0-9_]*\\b`, 'g');
+  structural = structural.replace(keywordRegex, 'VAR');
+  return structural;
+}
+
+/**
  * Compare two code submissions and return similarity report.
  * 
  * @param {string} code1 - First submission code
  * @param {string} code2 - Second submission code
  * @param {string} language - Programming language
- * @returns {{ similarityScore, matchingRegions, fingerprints1Count, fingerprints2Count, commonFingerprintsCount }}
+ * @returns {{ similarityScore, structuralScore, matchingRegions, fingerprints1Count, fingerprints2Count, commonFingerprintsCount }}
  */
 function compareSubmissions(code1, code2, language = 'python') {
   // Step 1: Normalize
   const norm1 = normalize(code1, language);
   const norm2 = normalize(code2, language);
+  
+  // Structural AST-style Normalization
+  const struct1 = normalizeStructural(code1, language);
+  const struct2 = normalizeStructural(code2, language);
 
   // Step 2: Tokenize
   const tokens1 = tokenize(norm1);
   const tokens2 = tokenize(norm2);
+  const structTokens1 = tokenize(struct1);
+  const structTokens2 = tokenize(struct2);
 
   // Handle very short code
   if (tokens1.length < K_GRAM_SIZE || tokens2.length < K_GRAM_SIZE) {
@@ -288,8 +309,18 @@ function compareSubmissions(code1, code2, language = 'python') {
   const fingerprints1 = winnow(hashed1);
   const fingerprints2 = winnow(hashed2);
 
-  // Step 6: Calculate Jaccard similarity
+  // Step 6: Calculate Jaccard similarity (Textual)
   const similarityScore = jaccardSimilarity(fingerprints1, fingerprints2);
+
+  // Structural Jaccard Similarity
+  const structKGrams1 = generateKGrams(structTokens1);
+  const structKGrams2 = generateKGrams(structTokens2);
+  const structFp1 = winnow(hashKGrams(structKGrams1));
+  const structFp2 = winnow(hashKGrams(structKGrams2));
+  const structuralScore = jaccardSimilarity(structFp1, structFp2);
+
+  // Combine scores: 40% Textual + 60% Structural
+  const finalScore = (similarityScore * 0.4) + (structuralScore * 0.6);
 
   // Step 7: Find matching regions
   const matchingRegions = findMatchingRegions(
@@ -302,7 +333,9 @@ function compareSubmissions(code1, code2, language = 'python') {
   const commonCount = [...set1].filter((h) => set2.has(h)).length;
 
   return {
-    similarityScore: Math.round(similarityScore * 100) / 100,
+    similarityScore: Math.round(finalScore * 100) / 100,
+    textualScore: Math.round(similarityScore * 100) / 100,
+    structuralScore: Math.round(structuralScore * 100) / 100,
     matchingRegions,
     fingerprints1Count: fingerprints1.length,
     fingerprints2Count: fingerprints2.length,

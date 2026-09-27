@@ -142,6 +142,70 @@ exports.submitReviewDocuments = async (req, res) => {
     
     await project.save();
     res.status(200).json({ message: 'Documents submitted successfully', project });
+
+    // Fire-and-forget: Trigger auto plagiarism scan for uploaded files
+    const scanUploadedDocument = async (docType, docUrl) => {
+      try {
+        if (!docUrl) return;
+        const filePath = path.join(__dirname, '..', docUrl);
+        const fs = require('fs');
+        if (!fs.existsSync(filePath)) return;
+
+        console.log(`🔄 Auto-scanning ${docType} for project ${project._id}`);
+        const reportData = await scanDocument(filePath);
+        
+        await DocumentPlagiarismReport.findOneAndDelete({ project: id, reviewId, documentName: docType });
+        
+        const report = await DocumentPlagiarismReport.create({
+          project: id,
+          reviewId,
+          documentName: docType,
+          overallSimilarity: reportData.overallSimilarity,
+          matches: reportData.matches
+        });
+
+        console.log(`✅ Auto-scan complete for ${docType}: ${reportData.overallSimilarity}% similarity`);
+
+        // Send alert if highly plagiarized (e.g. > 35%)
+        if (reportData.overallSimilarity > 35) {
+          const guideNotification = await Notification.create({
+            user: project.guide,
+            title: 'Document Plagiarism Alert',
+            message: `High similarity (${reportData.overallSimilarity}%) detected in ${docType === 'reportFile' ? 'Project Report' : 'Presentation'} for project "${project.title}".`,
+            type: 'plagiarism',
+            link: `/projects/${project._id}`
+          });
+          
+          const studentNotification = await Notification.create({
+            user: project.student,
+            title: 'Plagiarism Warning',
+            message: `High similarity (${reportData.overallSimilarity}%) detected in your ${docType === 'reportFile' ? 'Project Report' : 'Presentation'}. Please revise and resubmit your work.`,
+            type: 'plagiarism',
+            link: `/projects/${project._id}`
+          });
+
+          const io = getIO();
+          if (io) {
+            io.to(project.guide.toString()).emit('notification', guideNotification);
+            io.to(project.student.toString()).emit('notification', studentNotification);
+          }
+        }
+      } catch (err) {
+        console.error(`⚠️ Auto-scan failed for ${docType}:`, err.message);
+      }
+    };
+
+    // Process scans sequentially to avoid AI rate limits or parser conflicts
+    const processScansSequentially = async () => {
+      if (req.files && req.files['reportFile']) {
+        await scanUploadedDocument('reportFile', review.submission.reportFile);
+      }
+      if (req.files && req.files['presentationFile']) {
+        await scanUploadedDocument('presentationFile', review.submission.presentationFile);
+      }
+    };
+    
+    processScansSequentially();
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -150,7 +214,7 @@ exports.submitReviewDocuments = async (req, res) => {
 exports.gradeReview = async (req, res) => {
   try {
     const { id, reviewId } = req.params;
-    const { marks, feedback, isVerified } = req.body;
+    const { marks, feedback, isVerified, requireResubmission } = req.body;
     
     const project = await Project.findById(id);
     if (!project) return res.status(404).json({ message: 'Project not found' });
@@ -162,6 +226,7 @@ exports.gradeReview = async (req, res) => {
       marks: Number(marks),
       feedback,
       isVerified: Boolean(isVerified),
+      requireResubmission: Boolean(requireResubmission),
       gradedBy: req.user._id,
       gradedAt: new Date()
     };

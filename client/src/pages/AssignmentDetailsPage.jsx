@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import api from '../lib/api';
 import { 
@@ -91,9 +92,29 @@ const AssignmentDetailsPage = () => {
   const [executionResults, setExecutionResults] = useState(null);
   const [executionSummary, setExecutionSummary] = useState(null);
   
+  // History state
+  const [history, setHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  
   // Project submission state
   const [githubUrl, setGithubUrl] = useState('');
   const [projectReport, setProjectReport] = useState(null);
+
+  // Rubric state
+  const [rubric, setRubric] = useState(null);
+  const [rubricItems, setRubricItems] = useState([{ criteria: '', maxPoints: 10 }]);
+  const [savingRubric, setSavingRubric] = useState(false);
+
+  // Interview state
+  const [interviews, setInterviews] = useState([]);
+  const [loadingInterviews, setLoadingInterviews] = useState(false);
+  const [newSlot, setNewSlot] = useState({ date: '', time: '', duration: 15, meetingLink: '' });
+  const [bookingSlot, setBookingSlot] = useState(null);
+
+  // Unit Test state
+  const [testFramework, setTestFramework] = useState('none');
+  const [unitTestCode, setUnitTestCode] = useState('');
+  const [savingTests, setSavingTests] = useState(false);
 
   useEffect(() => {
     fetchAssignment();
@@ -106,6 +127,11 @@ const AssignmentDetailsPage = () => {
       setAssignment(res.data.assignment);
       if (res.data.assignment.allowedLanguages?.length > 0) {
         setLanguage(res.data.assignment.allowedLanguages[0]);
+      }
+      
+      if (res.data.assignment.testFramework) {
+        setTestFramework(res.data.assignment.testFramework);
+        setUnitTestCode(res.data.assignment.unitTestCode || '');
       }
       
       // If user has a previous submission, we could fetch its execution results here
@@ -132,6 +158,132 @@ const AssignmentDetailsPage = () => {
       setCode(currentTemplate);
     }
   }, [language]);
+
+  const fetchHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const res = await api.get(`/assignments/${id}/history`);
+      setHistory(res.data.history);
+    } catch (err) {
+      console.error('Failed to fetch history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  useEffect(() => {
+    if (leftTab === 'history') {
+      fetchHistory();
+    } else if (leftTab === 'rubric' && isAdminOrFaculty) {
+      fetchRubric();
+    } else if (leftTab === 'interviews') {
+      fetchInterviews();
+    }
+  }, [leftTab, id]);
+
+  const fetchInterviews = async () => {
+    try {
+      setLoadingInterviews(true);
+      const res = await api.get(`/assignments/${id}/interviews`);
+      setInterviews(res.data.interviews || []);
+    } catch (err) {
+      toast.error('Failed to load viva slots');
+    } finally {
+      setLoadingInterviews(false);
+    }
+  };
+
+  const handleCreateSlot = async (e) => {
+    e.preventDefault();
+    if (!newSlot.date || !newSlot.time) return;
+    
+    try {
+      const startTime = new Date(`${newSlot.date}T${newSlot.time}`);
+      const endTime = new Date(startTime.getTime() + newSlot.duration * 60000);
+      
+      const payload = {
+        slots: [{
+          startTime,
+          endTime,
+          meetingLink: newSlot.meetingLink
+        }]
+      };
+      
+      await api.post(`/assignments/${id}/interviews`, payload);
+      toast.success('Slot created successfully');
+      setNewSlot({ date: '', time: '', duration: 15, meetingLink: '' });
+      fetchInterviews();
+    } catch (err) {
+      toast.error('Failed to create slot');
+    }
+  };
+
+  const handleBookSlot = async (slotId) => {
+    try {
+      setBookingSlot(slotId);
+      await api.post(`/interviews/${slotId}/book`);
+      toast.success('Slot booked successfully');
+      fetchInterviews();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to book slot');
+    } finally {
+      setBookingSlot(null);
+    }
+  };
+
+  const handleCancelSlot = async (slotId) => {
+    try {
+      await api.post(`/interviews/${slotId}/cancel`);
+      toast.success('Slot cancelled');
+      fetchInterviews();
+    } catch (err) {
+      toast.error('Failed to cancel slot');
+    }
+  };
+
+  const fetchRubric = async () => {
+    try {
+      const res = await api.get(`/assignments/${id}/rubric`);
+      if (res.data.rubric) {
+        setRubric(res.data.rubric);
+        setRubricItems(res.data.rubric.items || [{ criteria: '', maxPoints: 10 }]);
+      }
+    } catch (err) {
+      if (err.response?.status !== 404) {
+        toast.error('Failed to load rubric');
+      }
+    }
+  };
+
+  const handleSaveRubric = async () => {
+    try {
+      setSavingRubric(true);
+      const res = await api.post(`/assignments/${id}/rubric`, { items: rubricItems });
+      setRubric(res.data.rubric);
+      toast.success('Rubric saved successfully');
+    } catch (err) {
+      toast.error('Failed to save rubric');
+    } finally {
+      setSavingRubric(false);
+    }
+  };
+
+  const handleSaveUnitTests = async () => {
+    try {
+      setSavingTests(true);
+      // We can reuse the assignment update endpoint (assuming it exists, or just send a PUT to /assignments/:id)
+      await api.put(`/assignments/${id}`, {
+        testFramework,
+        unitTestCode
+      });
+      toast.success('Unit tests configuration saved');
+      fetchAssignment(); // Refresh assignment state
+    } catch (err) {
+      toast.error('Failed to save unit tests config');
+    } finally {
+      setSavingTests(false);
+    }
+  };
 
   const handleSubmitCode = async () => {
     setSubmitError(null);
@@ -167,6 +319,9 @@ const AssignmentDetailsPage = () => {
         ...prev,
         userSubmission: execRes.data.submission
       }));
+      
+      // Refresh history in background
+      if (leftTab === 'history') fetchHistory();
     } catch (err) {
       console.error(err);
       setSubmitError(err.response?.data?.message || 'Failed to execute code.');
@@ -237,6 +392,8 @@ const AssignmentDetailsPage = () => {
       setExecutionSummary(execRes.data.summary);
       setExecutionResults(execRes.data.results);
       
+      // Refresh history in background
+      if (leftTab === 'history') fetchHistory();
     } catch (err) {
       console.error(err);
       setSubmitError(err.response?.data?.message || 'Failed to execute code.');
@@ -268,8 +425,8 @@ const AssignmentDetailsPage = () => {
 
   if (error || !assignment) {
     return (
-      <div className="max-w-4xl mx-auto mt-10">
-        <div className="glass rounded-2xl p-8 text-center text-rose-500">
+      <div className="max-w-4xl mx-auto mt-10 animate-fade-in">
+        <div className="glass-panel p-8 text-center text-rose-500">
           <h2 className="text-xl font-bold mb-2">Error Loading Assignment</h2>
           <p>{error || 'Assignment not found.'}</p>
           <button onClick={() => navigate('/assignments')} className="mt-4 px-4 py-2 bg-rose-500/10 rounded-lg font-semibold hover:bg-rose-500/20 transition-colors">
@@ -287,35 +444,48 @@ const AssignmentDetailsPage = () => {
   const canSubmit = user.role === 'student' && assignment.status === 'active' && !isPastDue;
 
   return (
-    <div className="h-[calc(100vh-130px)] min-h-[600px] flex flex-col md:flex-row gap-4">
+    <div className="h-[calc(100vh-130px)] min-h-[600px] flex flex-col md:flex-row gap-4 animate-fade-in">
       {/* LEFT PANE: Question & Results */}
-      <div className="flex-1 flex flex-col glass rounded-2xl overflow-hidden shadow-lg border border-slate-200/50 dark:border-slate-700/50 h-full">
+      <div className="flex-1 flex flex-col glass-panel h-full overflow-hidden">
         {/* Left Pane Header / Tabs */}
-        <div className="flex border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/30">
-          <button
-            onClick={() => setLeftTab('description')}
-            className={`flex-1 py-3 px-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
-              leftTab === 'description'
-                ? 'text-indigo-500 border-b-2 border-indigo-500 bg-white dark:bg-slate-800'
-                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-            }`}
-          >
-            <HiOutlineDocumentText className="w-5 h-5" /> Description
-          </button>
-          <button
-            onClick={() => setLeftTab('results')}
-            className={`flex-1 py-3 px-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
-              leftTab === 'results'
-                ? 'text-indigo-500 border-b-2 border-indigo-500 bg-white dark:bg-slate-800'
-                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-            }`}
-          >
-            <HiOutlineTerminal className="w-5 h-5" /> Test Results
-          </button>
+        <div className="flex overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] backdrop-blur-md hide-scrollbar">
+          {[
+            { id: 'description', label: 'Description', icon: HiOutlineDocumentText },
+            { id: 'history', label: 'Submissions', icon: HiOutlineClock },
+            { id: 'results', label: 'Test Results', icon: HiOutlineTerminal },
+            ...(isAdminOrFaculty ? [
+              { id: 'rubric', label: 'Rubric', icon: HiOutlineDocumentText },
+              { id: 'interviews', label: 'Viva Slots', icon: HiOutlineClock },
+              { id: 'unit-tests', label: 'Unit Tests', icon: HiOutlineTerminal }
+            ] : [
+              { id: 'interviews', label: 'Viva Slots', icon: HiOutlineClock }
+            ])
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setLeftTab(tab.id)}
+              className={`relative flex-1 py-4 px-6 text-sm font-bold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
+                leftTab === tab.id
+                  ? 'text-indigo-400'
+                  : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              <tab.icon className="w-5 h-5 z-10" /> 
+              <span className="z-10">{tab.label}</span>
+              {leftTab === tab.id && (
+                <motion.div
+                  layoutId="assignmentActiveTab"
+                  className="absolute inset-0 bg-indigo-500/10 border-b-2 border-indigo-500 z-0"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+            </button>
+          ))}
         </div>
 
         {/* Left Pane Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-white/50 dark:bg-slate-900/30">
+        <div className="flex-1 overflow-y-auto p-6 bg-[var(--color-bg-primary)]">
           {leftTab === 'description' ? (
             <div className="space-y-6">
               {/* Assignment Header Info */}
@@ -360,36 +530,36 @@ const AssignmentDetailsPage = () => {
               </div>
 
               {/* Constraints */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3 uppercase tracking-wider">Constraints</h3>
-                <div className="text-xs text-slate-600 dark:text-slate-400 font-mono whitespace-pre-wrap">
+              <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+                <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-3 uppercase tracking-wider">Constraints</h3>
+                <div className="text-xs text-[var(--color-text-secondary)] font-mono whitespace-pre-wrap">
                   {assignment.constraints || 'No specific constraints.'}
                 </div>
               </div>
 
               {/* Sample Test Cases */}
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Sample Test Cases</h3>
+                <h3 className="text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider">Sample Test Cases</h3>
                 {assignment.testCases.filter(tc => !tc.isHidden).map((tc, idx) => (
-                  <div key={tc._id} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
-                    <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300">
+                  <div key={tc._id} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] overflow-hidden shadow-xs">
+                    <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] font-bold text-xs text-[var(--color-text-secondary)]">
                       Example {idx + 1}
                     </div>
                     <div className="p-4 space-y-3">
                       <div>
-                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Input</div>
-                        <pre className="p-3 bg-slate-100 dark:bg-slate-900 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300 overflow-x-auto whitespace-pre-wrap">{tc.input || '(empty)'}</pre>
+                        <div className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1">Input</div>
+                        <pre className="p-3 bg-[var(--color-bg-hover)] rounded-lg text-xs font-mono text-[var(--color-text-primary)] overflow-x-auto whitespace-pre-wrap border border-[var(--color-border)] shadow-inner">{tc.input || '(empty)'}</pre>
                       </div>
                       <div>
-                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Output</div>
-                        <pre className="p-3 bg-slate-100 dark:bg-slate-900 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300 overflow-x-auto whitespace-pre-wrap">{tc.expectedOutput}</pre>
+                        <div className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1">Output</div>
+                        <pre className="p-3 bg-[var(--color-bg-hover)] rounded-lg text-xs font-mono text-[var(--color-text-primary)] overflow-x-auto whitespace-pre-wrap border border-[var(--color-border)] shadow-inner">{tc.expectedOutput}</pre>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          ) : (
+          ) : leftTab === 'results' ? (
             <div className="space-y-6 h-full">
               {submitError && (
                 <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-500 text-sm">
@@ -480,12 +650,307 @@ const AssignmentDetailsPage = () => {
                 </div>
               )}
             </div>
-          )}
+          ) : leftTab === 'history' ? (
+            <div className="h-full flex flex-col">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Submission History</h2>
+              
+              {loadingHistory ? (
+                <div className="flex-1 flex justify-center items-center">
+                  <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
+                </div>
+              ) : history.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
+                  <HiOutlineClock className="w-12 h-12 mb-2 opacity-50" />
+                  <p className="font-semibold">No submissions yet.</p>
+                </div>
+              ) : (
+                <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+                  {history.map((run, idx) => (
+                    <div key={idx} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md transition-shadow">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-sm font-bold ${
+                            run.status === 'Accepted' ? 'text-emerald-500' :
+                            run.status === 'Wrong Answer' ? 'text-amber-500' : 'text-rose-500'
+                          }`}>
+                            {run.status}
+                          </span>
+                          <span className="text-xs text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded">
+                            {run.type}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-500 font-semibold">
+                          {format(new Date(run.createdAt), 'MMM dd, yyyy h:mm a')}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-center">
+                          <div className="text-[10px] text-slate-400 uppercase font-bold">Passed</div>
+                          <div className="text-sm font-bold text-slate-700 dark:text-slate-300">{run.testCasesPassed} / {run.totalTestCases}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-[10px] text-slate-400 uppercase font-bold">Lang</div>
+                          <div className="text-sm font-bold text-slate-700 dark:text-slate-300">{run.language}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : leftTab === 'rubric' && isAdminOrFaculty ? (
+            <div className="h-full flex flex-col space-y-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Grading Rubric</h2>
+                  <p className="text-sm text-slate-500">Configure criteria for manual grading and peer reviews.</p>
+                </div>
+                <button
+                  onClick={handleSaveRubric}
+                  disabled={savingRubric}
+                  className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-bold text-sm transition-colors"
+                >
+                  {savingRubric ? 'Saving...' : 'Save Rubric'}
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                {rubricItems.map((item, idx) => (
+                  <div key={idx} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3 relative">
+                    <button
+                      onClick={() => setRubricItems(rubricItems.filter((_, i) => i !== idx))}
+                      className="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors"
+                    >
+                      <HiOutlineTrash className="w-5 h-5" />
+                    </button>
+                    
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Criteria Name</label>
+                      <input
+                        type="text"
+                        value={item.criteria}
+                        onChange={(e) => {
+                          const newItems = [...rubricItems];
+                          newItems[idx].criteria = e.target.value;
+                          setRubricItems(newItems);
+                        }}
+                        placeholder="e.g. Code Quality"
+                        className="input-field w-full px-3 py-2 rounded-lg text-sm outline-none"
+                      />
+                    </div>
+                    
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Description (Optional)</label>
+                        <input
+                          type="text"
+                          value={item.description || ''}
+                          onChange={(e) => {
+                            const newItems = [...rubricItems];
+                            newItems[idx].description = e.target.value;
+                            setRubricItems(newItems);
+                          }}
+                          placeholder="What is being evaluated?"
+                          className="input-field w-full px-3 py-2 rounded-lg text-sm outline-none"
+                        />
+                      </div>
+                      <div className="w-32">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Max Points</label>
+                        <input
+                          type="number"
+                          value={item.maxPoints}
+                          onChange={(e) => {
+                            const newItems = [...rubricItems];
+                            newItems[idx].maxPoints = parseInt(e.target.value) || 0;
+                            setRubricItems(newItems);
+                          }}
+                          min="0"
+                          className="input-field w-full px-3 py-2 rounded-lg text-sm outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                <button
+                  onClick={() => setRubricItems([...rubricItems, { criteria: '', maxPoints: 10 }])}
+                  className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 hover:text-indigo-500 hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors font-bold text-sm"
+                >
+                  + Add Criteria
+                </button>
+              </div>
+            </div>
+          ) : leftTab === 'interviews' ? (
+            <div className="h-full flex flex-col space-y-4">
+              <div className="flex justify-between items-center mb-2">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Viva / Interview Slots</h2>
+                  <p className="text-sm text-slate-500">
+                    {isAdminOrFaculty ? 'Manage your availability slots for student vivas.' : 'Book an available slot for your viva.'}
+                  </p>
+                </div>
+              </div>
+
+              {isAdminOrFaculty && (
+                <div className="glass-panel p-4 mb-4">
+                  <h3 className="text-sm font-bold mb-3 text-slate-800 dark:text-slate-200">Create New Slot</h3>
+                  <form onSubmit={handleCreateSlot} className="flex flex-wrap gap-3 items-end">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
+                      <input type="date" required value={newSlot.date} onChange={e => setNewSlot({...newSlot, date: e.target.value})} className="input-field px-3 py-2 rounded-lg text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Time</label>
+                      <input type="time" required value={newSlot.time} onChange={e => setNewSlot({...newSlot, time: e.target.value})} className="input-field px-3 py-2 rounded-lg text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Duration (min)</label>
+                      <input type="number" value={newSlot.duration} onChange={e => setNewSlot({...newSlot, duration: e.target.value})} className="input-field px-3 py-2 rounded-lg text-sm w-24" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Meeting Link (Optional)</label>
+                      <input type="url" placeholder="https://meet.google.com/..." value={newSlot.meetingLink} onChange={e => setNewSlot({...newSlot, meetingLink: e.target.value})} className="input-field w-full px-3 py-2 rounded-lg text-sm" />
+                    </div>
+                    <button type="submit" className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-bold text-sm transition-colors h-[38px]">
+                      Add Slot
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              <div className="flex-1 overflow-y-auto space-y-3">
+                {loadingInterviews ? (
+                  <div className="flex justify-center py-8">
+                    <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
+                  </div>
+                ) : interviews.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500 glass-panel">
+                    No slots available right now.
+                  </div>
+                ) : (
+                  interviews.map(slot => (
+                    <div key={slot._id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            {format(new Date(slot.startTime), 'MMM dd, yyyy - h:mm a')}
+                          </span>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                            slot.status === 'open' ? 'bg-emerald-500/10 text-emerald-500' :
+                            slot.status === 'booked' ? 'bg-amber-500/10 text-amber-500' :
+                            'bg-slate-500/10 text-slate-500'
+                          }`}>
+                            {slot.status.toUpperCase()}
+                          </span>
+                        </div>
+                        {isAdminOrFaculty && slot.student && (
+                          <div className="text-sm text-slate-600 dark:text-slate-400">
+                            Booked by: <span className="font-bold">{slot.student.name}</span>
+                          </div>
+                        )}
+                        {!isAdminOrFaculty && slot.faculty && (
+                          <div className="text-sm text-slate-600 dark:text-slate-400">
+                            Faculty: <span className="font-bold">{slot.faculty.name}</span>
+                          </div>
+                        )}
+                        {slot.meetingLink && (
+                          <a href={slot.meetingLink} target="_blank" rel="noreferrer" className="text-xs text-indigo-500 hover:underline mt-1 inline-block">
+                            Join Meeting Link
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        {user.role === 'student' && slot.status === 'open' && (
+                          <button
+                            onClick={() => handleBookSlot(slot._id)}
+                            disabled={bookingSlot === slot._id}
+                            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-bold transition-colors"
+                          >
+                            {bookingSlot === slot._id ? 'Booking...' : 'Book Slot'}
+                          </button>
+                        )}
+                        {((user.role === 'student' && slot.student?._id === user.id) || (isAdminOrFaculty && slot.status !== 'cancelled')) && (
+                          <button
+                            onClick={() => handleCancelSlot(slot._id)}
+                            className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 rounded-lg text-sm font-bold transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          ) : leftTab === 'unit-tests' && isAdminOrFaculty ? (
+            <div className="h-full flex flex-col space-y-4">
+              <div className="flex justify-between items-center mb-2">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Unit Test Configuration</h2>
+                  <p className="text-sm text-slate-500">
+                    Define the testing framework and the test suite code to run against submissions.
+                  </p>
+                </div>
+                <button
+                  onClick={handleSaveUnitTests}
+                  disabled={savingTests}
+                  className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-bold text-sm transition-colors"
+                >
+                  {savingTests ? 'Saving...' : 'Save Tests'}
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Testing Framework</label>
+                  <select
+                    value={testFramework}
+                    onChange={(e) => setTestFramework(e.target.value)}
+                    className="input-field w-full md:w-1/2 px-3 py-2 rounded-lg text-sm"
+                  >
+                    <option value="none">None (Standard I/O)</option>
+                    <option value="mocha">Mocha/Chai (JavaScript)</option>
+                    <option value="pytest">PyTest (Python)</option>
+                    <option value="junit">JUnit (Java)</option>
+                    <option value="gtest">Google Test (C++)</option>
+                  </select>
+                </div>
+
+                {testFramework !== 'none' && (
+                  <div className="flex-1 flex flex-col mt-4 min-h-[400px]">
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Test Suite Code</label>
+                    <div className="flex-1 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                      <Editor
+                        height="100%"
+                        language={
+                          testFramework === 'pytest' ? 'python' :
+                          testFramework === 'mocha' ? 'javascript' :
+                          testFramework === 'junit' ? 'java' :
+                          testFramework === 'gtest' ? 'cpp' : 'javascript'
+                        }
+                        theme="vs-dark"
+                        value={unitTestCode}
+                        onChange={(value) => setUnitTestCode(value)}
+                        options={{
+                          minimap: { enabled: false },
+                          fontSize: 14,
+                          lineHeight: 1.5,
+                          padding: { top: 16 },
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
 
       {/* RIGHT PANE: Editor or Project Submission */}
-      <div className="flex-1 flex flex-col glass rounded-2xl overflow-hidden shadow-lg border border-slate-200/50 dark:border-slate-700/50 h-full">
+      <div className="flex-1 flex flex-col glass-panel h-full overflow-hidden">
         {assignment.type === 'project' ? (
           <div className="flex-1 overflow-y-auto p-8 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50">
             <div className="w-full max-w-md space-y-6 bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
@@ -521,15 +986,14 @@ const AssignmentDetailsPage = () => {
                 </div>
                 
                 {user.role !== 'student' ? (
-                  <div className="text-center mt-4 text-xs font-bold text-slate-500 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <div className="text-center mt-4 text-xs font-bold text-slate-500 px-3 py-2 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
                     Admin Preview Mode
                   </div>
                 ) : canSubmit ? (
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-md hover:shadow-lg disabled:opacity-50"
-                    style={{ background: 'var(--gradient-brand)' }}
+                    className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
                   >
                     {submitting ? 'Submitting...' : 'Submit Project'}
                   </button>
@@ -575,8 +1039,7 @@ const AssignmentDetailsPage = () => {
                     <button
                       onClick={handleSubmitCode}
                       disabled={submitting}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white transition-all shadow-md hover:shadow-lg disabled:opacity-50"
-                      style={{ background: 'var(--gradient-brand)' }}
+                      className="btn-primary flex items-center gap-2"
                     >
                       {submitting ? (
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
