@@ -51,6 +51,47 @@ const ProjectDetailsPage = () => {
   const [plagiarismReports, setPlagiarismReports] = useState({});
   const [checkingPlagiarism, setCheckingPlagiarism] = useState({});
 
+  // Poll for missing reports every 5 seconds for faculty
+  useEffect(() => {
+    if (!project || (!isFaculty && !isGuide)) return;
+    
+    let hasMissing = false;
+    for (const review of project.reviews) {
+      if (review.submission?.reportFile && !plagiarismReports[`${review._id}-reportFile`]) hasMissing = true;
+      if (review.submission?.presentationFile && !plagiarismReports[`${review._id}-presentationFile`]) hasMissing = true;
+    }
+    
+    if (!hasMissing) return;
+
+    const interval = setInterval(async () => {
+      let updated = false;
+      const newReports = { ...plagiarismReports };
+      
+      for (const review of project.reviews) {
+        if (!newReports[`${review._id}-reportFile`] || !newReports[`${review._id}-presentationFile`]) {
+          try {
+            const res = await api.get(`/projects/${id}/reviews/${review._id}/plagiarism-report`);
+            if (res.data.success && res.data.reports) {
+              res.data.reports.forEach(report => {
+                const key = `${review._id}-${report.documentName}`;
+                if (!newReports[key]) {
+                  newReports[key] = report;
+                  updated = true;
+                }
+              });
+            }
+          } catch (e) { /* ignore */ }
+        }
+      }
+      
+      if (updated) {
+        setPlagiarismReports(newReports);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [project, isFaculty, isGuide, plagiarismReports, id]);
+
   useEffect(() => {
     fetchProject();
   }, [id]);
@@ -478,14 +519,16 @@ const ProjectDetailsPage = () => {
                       </a>
                       {isFaculty && (
                         <div className="flex flex-col gap-2">
-                          <button 
-                            onClick={() => handleCheckPlagiarism(review._id, 'reportFile')}
-                            disabled={checkingPlagiarism[`${review._id}-reportFile`]}
-                            className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-[var(--color-bg-elevated)] border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[var(--color-text-primary)] py-1.5 px-3 rounded-md w-fit transition-all shadow-xs disabled:opacity-50"
-                          >
-                            <HiOutlineShieldCheck className="w-3.5 h-3.5" /> 
-                            {checkingPlagiarism[`${review._id}-reportFile`] ? 'Checking...' : 'Check Plagiarism'}
-                          </button>
+                          {!plagiarismReports[`${review._id}-reportFile`] && (
+                            <button 
+                              onClick={() => handleCheckPlagiarism(review._id, 'reportFile')}
+                              disabled={checkingPlagiarism[`${review._id}-reportFile`]}
+                              className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-[var(--color-bg-elevated)] border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[var(--color-text-primary)] py-1.5 px-3 rounded-md w-fit transition-all shadow-xs disabled:opacity-50"
+                            >
+                              <HiOutlineShieldCheck className="w-3.5 h-3.5" /> 
+                              {checkingPlagiarism[`${review._id}-reportFile`] ? 'Checking...' : 'Check Plagiarism (Auto-scan pending)'}
+                            </button>
+                          )}
                           {plagiarismReports[`${review._id}-reportFile`] && (
                             <div className="text-xs p-3 bg-[var(--color-bg-elevated)] rounded-md border border-[var(--color-border)] flex justify-between items-center shadow-xs">
                               <div>
@@ -532,14 +575,16 @@ const ProjectDetailsPage = () => {
                       </a>
                       {isFaculty && (
                         <div className="flex flex-col gap-2">
-                          <button 
-                            onClick={() => handleCheckPlagiarism(review._id, 'presentationFile')}
-                            disabled={checkingPlagiarism[`${review._id}-presentationFile`]}
-                            className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-[var(--color-bg-elevated)] border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[var(--color-text-primary)] py-1.5 px-3 rounded-md w-fit transition-all shadow-xs disabled:opacity-50"
-                          >
-                            <HiOutlineShieldCheck className="w-3.5 h-3.5" /> 
-                            {checkingPlagiarism[`${review._id}-presentationFile`] ? 'Checking...' : 'Check Plagiarism'}
-                          </button>
+                          {!plagiarismReports[`${review._id}-presentationFile`] && (
+                            <button 
+                              onClick={() => handleCheckPlagiarism(review._id, 'presentationFile')}
+                              disabled={checkingPlagiarism[`${review._id}-presentationFile`]}
+                              className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-[var(--color-bg-elevated)] border border-[var(--color-border)] hover:border-[var(--color-text-muted)] text-[var(--color-text-primary)] py-1.5 px-3 rounded-md w-fit transition-all shadow-xs disabled:opacity-50"
+                            >
+                              <HiOutlineShieldCheck className="w-3.5 h-3.5" /> 
+                              {checkingPlagiarism[`${review._id}-presentationFile`] ? 'Checking...' : 'Check Plagiarism (Auto-scan pending)'}
+                            </button>
+                          )}
                           {plagiarismReports[`${review._id}-presentationFile`] && (
                             <div className="text-xs p-3 bg-[var(--color-bg-elevated)] rounded-md border border-[var(--color-border)] flex justify-between items-center shadow-xs">
                               <div>
