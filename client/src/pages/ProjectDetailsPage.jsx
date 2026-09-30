@@ -51,9 +51,12 @@ const ProjectDetailsPage = () => {
   const [plagiarismReports, setPlagiarismReports] = useState({});
   const [checkingPlagiarism, setCheckingPlagiarism] = useState({});
 
+  const isStudent = user?.role === 'student';
+  const isFaculty = user && ['faculty', 'admin'].includes(user.role);
+
   // Poll for missing reports every 5 seconds for faculty
   useEffect(() => {
-    if (!project || (!isFaculty && !isGuide)) return;
+    if (!project || !isFaculty) return;
     
     let hasMissing = false;
     for (const review of project.reviews) {
@@ -90,7 +93,7 @@ const ProjectDetailsPage = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [project, isFaculty, isGuide, plagiarismReports, id]);
+  }, [project, isFaculty, plagiarismReports, id]);
 
   useEffect(() => {
     fetchProject();
@@ -336,8 +339,6 @@ const ProjectDetailsPage = () => {
     );
   }
 
-  const isStudent = user.role === 'student';
-  const isFaculty = ['faculty', 'admin'].includes(user.role);
   const canEditProject = isFaculty || (isStudent && project.reviews?.length === 0);
 
   return (
