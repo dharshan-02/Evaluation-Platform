@@ -250,7 +250,7 @@ const UsersPage = () => {
                 <input 
                   type="text" required
                   value={createFormData.name} onChange={(e) => setCreateFormData({...createFormData, name: e.target.value})}
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 outline-none text-slate-900 dark:text-white"
                 />
               </div>
               
@@ -259,7 +259,7 @@ const UsersPage = () => {
                 <input 
                   type="email" required
                   value={createFormData.email} onChange={(e) => setCreateFormData({...createFormData, email: e.target.value})}
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 outline-none text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -268,7 +268,7 @@ const UsersPage = () => {
                 <input 
                   type="password" required minLength="6"
                   value={createFormData.password} onChange={(e) => setCreateFormData({...createFormData, password: e.target.value})}
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 outline-none text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -277,7 +277,7 @@ const UsersPage = () => {
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Role</label>
                   <select 
                     value={createFormData.role} onChange={(e) => setCreateFormData({...createFormData, role: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 outline-none text-slate-900 dark:text-white"
                   >
                     <option value="student">Student</option>
                     <option value="faculty">Faculty</option>
@@ -291,7 +291,7 @@ const UsersPage = () => {
                     <input 
                       type="text" required
                       value={createFormData.studentId} onChange={(e) => setCreateFormData({...createFormData, studentId: e.target.value})}
-                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                      className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/50 outline-none text-slate-900 dark:text-white"
                     />
                   </div>
                 )}

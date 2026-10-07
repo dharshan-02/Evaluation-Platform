@@ -407,6 +407,19 @@ const SubmissionDetailsPage = () => {
           >
             <HiOutlineCode className="w-5 h-5" /> Source Code
           </button>
+
+          {submission.aiCodeReview && (
+            <button
+              onClick={() => setActiveTab('aifeedback')}
+              className={`flex-1 py-3 px-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+                activeTab === 'aifeedback'
+                  ? 'text-indigo-500 border-b-2 border-indigo-500 bg-[var(--color-bg-primary)]'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]'
+              }`}
+            >
+              <HiOutlineSparkles className="w-5 h-5" /> AI Feedback
+            </button>
+          )}
           
           <button
             onClick={() => setActiveTab('reviews')}
@@ -550,6 +563,51 @@ const SubmissionDetailsPage = () => {
                     No source code available.
                   </div>
                 )}
+              </div>
+            ) : activeTab === 'aifeedback' && submission.aiCodeReview ? (
+              <div className="space-y-6 animate-fade-in">
+                <div className="p-6 glass-panel">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <HiOutlineSparkles className="w-6 h-6 text-indigo-500" /> AI Code Review
+                    </h3>
+                    <div className="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 font-bold rounded-xl border border-indigo-100 dark:border-indigo-800">
+                      Score: {submission.aiCodeReview.score}/100
+                    </div>
+                  </div>
+                  
+                  <p className="text-slate-700 dark:text-slate-300 mb-8 italic">
+                    "{submission.aiCodeReview.summary}"
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-emerald-50 dark:bg-emerald-900/10 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-800">
+                      <h4 className="font-bold text-emerald-700 dark:text-emerald-400 mb-4 flex items-center gap-2">
+                        <HiOutlineCheckCircle className="w-5 h-5" /> Strengths
+                      </h4>
+                      <ul className="space-y-2">
+                        {submission.aiCodeReview.strengths.map((str, i) => (
+                          <li key={i} className="text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2">
+                            <span className="text-emerald-500 mt-1">•</span> {str}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="bg-rose-50 dark:bg-rose-900/10 p-5 rounded-2xl border border-rose-100 dark:border-rose-800">
+                      <h4 className="font-bold text-rose-700 dark:text-rose-400 mb-4 flex items-center gap-2">
+                        <HiOutlineXCircle className="w-5 h-5" /> Areas for Improvement
+                      </h4>
+                      <ul className="space-y-2">
+                        {submission.aiCodeReview.weaknesses.map((weak, i) => (
+                          <li key={i} className="text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2">
+                            <span className="text-rose-500 mt-1">•</span> {weak}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : activeTab === 'ci' ? (
               <div className="space-y-6">

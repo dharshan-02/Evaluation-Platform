@@ -444,11 +444,11 @@ const AssignmentDetailsPage = () => {
   const canSubmit = user.role === 'student' && assignment.status === 'active' && !isPastDue;
 
   return (
-    <div className="h-[calc(100vh-130px)] min-h-[600px] flex flex-col md:flex-row gap-4 animate-fade-in">
+    <div className="h-[calc(100vh-130px)] min-h-[600px] flex flex-col md:flex-row gap-6 animate-fade-in p-2">
       {/* LEFT PANE: Question & Results */}
       <div className="flex-1 flex flex-col glass-panel h-full overflow-hidden">
         {/* Left Pane Header / Tabs */}
-        <div className="flex overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] backdrop-blur-md hide-scrollbar">
+        <div className="flex overflow-x-auto p-2 gap-2 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] backdrop-blur-md hide-scrollbar">
           {[
             { id: 'description', label: 'Description', icon: HiOutlineDocumentText },
             { id: 'history', label: 'Submissions', icon: HiOutlineClock },
@@ -464,10 +464,10 @@ const AssignmentDetailsPage = () => {
             <button
               key={tab.id}
               onClick={() => setLeftTab(tab.id)}
-              className={`relative flex-1 py-4 px-6 text-sm font-bold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
+              className={`relative py-2.5 px-5 rounded-xl text-sm font-bold flex flex-1 items-center justify-center gap-2 transition-all whitespace-nowrap ${
                 leftTab === tab.id
-                  ? 'text-indigo-400'
-                  : 'text-slate-500 hover:text-slate-300'
+                  ? 'text-white drop-shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
               }`}
             >
               <tab.icon className="w-5 h-5 z-10" /> 
@@ -475,7 +475,7 @@ const AssignmentDetailsPage = () => {
               {leftTab === tab.id && (
                 <motion.div
                   layoutId="assignmentActiveTab"
-                  className="absolute inset-0 bg-indigo-500/10 border-b-2 border-indigo-500 z-0"
+                  className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-md shadow-indigo-500/20 rounded-xl z-0"
                   initial={false}
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
@@ -510,7 +510,7 @@ const AssignmentDetailsPage = () => {
                   )}
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{assignment.title}</h1>
+                  <h1 className="text-3xl font-extrabold bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow-sm pb-1">{assignment.title}</h1>
                   {isAdminOrFaculty && (
                     <button onClick={handleDeleteAssignment} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors" title="Delete Assignment">
                       <HiOutlineTrash className="w-5 h-5" />
@@ -1008,22 +1008,24 @@ const AssignmentDetailsPage = () => {
         ) : (
           <>
             {/* Editor Toolbar */}
-            <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/80">
-              <div className="flex items-center gap-2">
-                <HiOutlineCode className="w-5 h-5 text-indigo-500" />
+            <div className="flex items-center justify-between p-3 px-4 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/80 dark:bg-slate-800/80 backdrop-blur-xl">
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-indigo-500/10 text-indigo-500 rounded-lg">
+                  <HiOutlineCode className="w-5 h-5" />
+                </div>
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="input-field px-3 py-1.5 rounded-lg text-sm font-bold outline-none border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="input-field px-4 py-2 rounded-xl text-sm font-bold outline-none border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors cursor-pointer"
                 >
                   {assignment.allowedLanguages?.map(lang => (
                     <option key={lang} value={lang}>{lang.toUpperCase()}</option>
                   ))}
                 </select>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 {user.role !== 'student' ? (
-                  <span className="text-xs font-bold text-slate-500 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700">
+                  <span className="text-xs font-bold text-slate-500 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
                     Admin Preview Mode
                   </span>
                 ) : canSubmit ? (
@@ -1031,26 +1033,26 @@ const AssignmentDetailsPage = () => {
                     <button
                       onClick={handleRunCode}
                       disabled={submitting}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-all shadow-sm hover:shadow-md disabled:opacity-50"
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm hover:shadow disabled:opacity-50"
                     >
-                      <HiOutlinePlay className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                      Run
+                      <HiOutlinePlay className="w-4 h-4 text-emerald-500" />
+                      Run Code
                     </button>
                     <button
                       onClick={handleSubmitCode}
                       disabled={submitting}
-                      className="btn-primary flex items-center gap-2"
+                      className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transition-all shadow-md shadow-indigo-500/25 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
                     >
                       {submitting ? (
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       ) : (
-                        <HiOutlinePlay className="w-4 h-4" />
+                        <HiOutlineCheckCircle className="w-5 h-5" />
                       )}
-                      Submit
+                      Submit Solution
                     </button>
                   </>
                 ) : (
-                  <span className="text-xs font-bold text-rose-500 px-3 py-1 bg-rose-500/10 rounded-full border border-rose-500/20">
+                  <span className="text-xs font-bold text-rose-500 px-4 py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">
                     {isPastDue ? 'Deadline Passed' : 'Not Active'}
                   </span>
                 )}
