@@ -228,14 +228,16 @@ const SubmissionDetailsPage = () => {
                 <li className="flex flex-col pb-3 border-b border-slate-200/50 dark:border-slate-700/50">
                   <div className="flex justify-between items-center w-full mb-2">
                     <span className="text-slate-500">Plagiarism Score</span>
-                    <button 
-                      onClick={handleWebPlagiarismCheck} 
-                      disabled={checkingWebPlagiarism} 
-                      className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded flex items-center gap-1 hover:bg-indigo-200 transition-colors disabled:opacity-50"
-                    >
-                      <HiOutlineSparkles className={checkingWebPlagiarism ? 'animate-pulse' : ''} /> 
-                      {checkingWebPlagiarism ? 'Checking...' : 'Detect AI Code'}
-                    </button>
+                    {!submission.aiPlagiarismReport && (
+                      <button 
+                        onClick={handleWebPlagiarismCheck} 
+                        disabled={checkingWebPlagiarism} 
+                        className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded flex items-center gap-1 hover:bg-indigo-200 transition-colors disabled:opacity-50"
+                      >
+                        <HiOutlineSparkles className={checkingWebPlagiarism ? 'animate-pulse' : ''} /> 
+                        {checkingWebPlagiarism ? 'Checking...' : 'Detect AI Code'}
+                      </button>
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <div className="flex justify-between items-center w-full">

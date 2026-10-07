@@ -117,6 +117,7 @@ const submissionSchema = new mongoose.Schema(
       max: 100,
     },
     staticAnalysisReport: { type: Object },
+    aiCodeReview: { type: Object },
     evaluatedAt: {
       type: Date,
     },

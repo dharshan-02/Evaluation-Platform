@@ -71,6 +71,9 @@ async function processSubmission(submissionId) {
     // Step 4: Run AI Code Plagiarism check
     await runAiCodeDetection(submissionId);
 
+    // Step 5: Run AI Code Review for qualitative feedback
+    await runAiCodeReview(submissionId);
+
     console.log(`✅ Auto-processing complete for submission ${submissionId}`);
   } catch (error) {
     console.error(`❌ Auto-processing error for submission ${submissionId}:`, error);
@@ -477,6 +480,66 @@ Respond strictly in JSON format (do not use markdown blocks):
     console.log(`✅ AI code plagiarism check complete for ${submissionId}: ${aiReport.isPlagiarized ? 'FLAGGED' : 'CLEAR'}`);
   } catch (error) {
     console.error(`⚠️ AI code plagiarism check failed for ${submissionId}:`, error.message);
+  }
+}
+
+/**
+ * Step 5: Run AI Code Review for qualitative feedback
+ */
+async function runAiCodeReview(submissionId) {
+  try {
+    const submission = await Submission.findById(submissionId).populate('student');
+    if (!submission || !submission.files || submission.files.length === 0) return;
+
+    const code = submission.files.map(f => f.content).join('\n');
+    if (!process.env.GEMINI_API_KEY) {
+      console.log('Gemini API key missing, skipping AI code review');
+      return;
+    }
+
+    console.log(`🤖 Running AI code review for submission ${submissionId}`);
+    
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const prompt = `
+Analyze the following student code for code quality, security vulnerabilities, and bad practices.
+
+Code:
+\`\`\`
+${code}
+\`\`\`
+
+Respond strictly in JSON format:
+{
+  "strengths": ["List of good practices found"],
+  "weaknesses": ["List of bad practices, bugs, or hardcoded values found"],
+  "score": number (0-100 score for code quality),
+  "summary": "Short 2 sentence overall feedback"
+}
+`;
+
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text();
+    responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    let reviewReport;
+    try {
+      reviewReport = JSON.parse(responseText);
+    } catch (e) {
+      reviewReport = { score: 0, strengths: [], weaknesses: [], summary: "Failed to parse AI response." };
+    }
+
+    submission.aiCodeReview = reviewReport;
+    await submission.save();
+
+    emitSafe('submission:status', {
+      submissionId: submission._id,
+      status: 'evaluated', 
+    });
+
+    console.log(`✅ AI code review complete for ${submissionId}`);
+  } catch (error) {
+    console.error(`⚠️ AI code review failed for ${submissionId}:`, error.message);
   }
 }
 
