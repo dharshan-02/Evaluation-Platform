@@ -12,6 +12,12 @@ const matchSchema = new mongoose.Schema({
   similarityScore: {
     type: Number,
     required: true, // percentage match for this chunk
+  },
+  startIndex: {
+    type: Number,
+  },
+  endIndex: {
+    type: Number,
   }
 });
 
@@ -37,6 +43,19 @@ const documentPlagiarismReportSchema = new mongoose.Schema({
   scannedAt: {
     type: Date,
     default: Date.now,
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'flagged', 'dismissed'],
+    default: 'pending',
+  },
+  severity: {
+    type: String,
+    enum: ['low', 'medium', 'high'],
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   }
 }, { timestamps: true });
 

@@ -156,12 +156,17 @@ exports.submitReviewDocuments = async (req, res) => {
         
         await DocumentPlagiarismReport.findOneAndDelete({ project: id, reviewId, documentName: docType });
         
+        let calculatedSeverity = 'low';
+        if (reportData.overallSimilarity >= 30) calculatedSeverity = 'high';
+        else if (reportData.overallSimilarity >= 15) calculatedSeverity = 'medium';
+
         const report = await DocumentPlagiarismReport.create({
           project: id,
           reviewId,
           documentName: docType,
           overallSimilarity: reportData.overallSimilarity,
-          matches: reportData.matches
+          matches: reportData.matches,
+          severity: calculatedSeverity
         });
 
         console.log(`✅ Auto-scan complete for ${docType}: ${reportData.overallSimilarity}% similarity`);
@@ -289,12 +294,17 @@ exports.scanDocumentPlagiarism = async (req, res) => {
     await DocumentPlagiarismReport.findOneAndDelete({ project: id, reviewId, documentName: documentType });
 
     // Save new report
+    let calculatedSeverity = 'low';
+    if (reportData.overallSimilarity >= 30) calculatedSeverity = 'high';
+    else if (reportData.overallSimilarity >= 15) calculatedSeverity = 'medium';
+
     const report = await DocumentPlagiarismReport.create({
       project: id,
       reviewId,
       documentName: documentType,
       overallSimilarity: reportData.overallSimilarity,
-      matches: reportData.matches
+      matches: reportData.matches,
+      severity: calculatedSeverity
     });
 
     res.status(200).json({ success: true, message: 'Plagiarism scan completed', report });
@@ -522,5 +532,28 @@ exports.downloadDocumentPlagiarismReport = async (req, res) => {
   } catch (error) {
     console.error('PDF Generation Error:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+exports.updateDocumentPlagiarismStatus = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const { status } = req.body;
+
+    if (!['pending', 'flagged', 'dismissed'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const report = await DocumentPlagiarismReport.findByIdAndUpdate(
+      reportId,
+      { status, reviewedBy: req.user._id },
+      { new: true }
+    );
+
+    if (!report) return res.status(404).json({ message: 'Report not found' });
+
+    res.status(200).json({ success: true, message: 'Status updated', report });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

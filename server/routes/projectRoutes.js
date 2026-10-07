@@ -36,5 +36,6 @@ router.post('/:id/reviews/:reviewId/grade', authorize('admin', 'faculty'), proje
 // Document Plagiarism Check Routes
 router.post('/:id/reviews/:reviewId/plagiarism-scan', authorize('admin', 'faculty'), projectController.scanDocumentPlagiarism);
 router.get('/:id/reviews/:reviewId/plagiarism-report', projectController.getDocumentPlagiarismReport);
+router.patch('/plagiarism/report/:reportId/status', authorize('admin', 'faculty'), projectController.updateDocumentPlagiarismStatus);
 
 module.exports = router;
