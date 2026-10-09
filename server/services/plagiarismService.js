@@ -319,8 +319,8 @@ function compareSubmissions(code1, code2, language = 'python') {
   const structFp2 = winnow(hashKGrams(structKGrams2));
   const structuralScore = jaccardSimilarity(structFp1, structFp2);
 
-  // Combine scores: 40% Textual + 60% Structural
-  const finalScore = (similarityScore * 0.4) + (structuralScore * 0.6);
+  // Use the maximum of Textual and Structural scores to prevent bypass via variable renaming
+  const finalScore = Math.max(similarityScore, structuralScore);
 
   // Step 7: Find matching regions
   const matchingRegions = findMatchingRegions(

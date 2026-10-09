@@ -138,6 +138,36 @@ const LoginPage = () => {
           </span>
         </motion.button>
       </form>
+
+      {/* Demo Credentials */}
+      <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50">
+        <p className="text-xs font-semibold text-center text-[var(--color-text-muted)] uppercase tracking-wider mb-4">
+          Demo Credentials
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          <button
+            type="button"
+            onClick={() => setFormData({ email: 'admin@neovika.com', password: 'Admin@123' })}
+            className="px-3 py-2 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[var(--color-text-primary)] transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
+          >
+            👑 Admin
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormData({ email: 'sarah.j@neovika.com', password: 'Faculty@123' })}
+            className="px-3 py-2 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[var(--color-text-primary)] transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
+          >
+            👨‍🏫 Faculty
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormData({ email: 'alex@student.com', password: 'Student@123' })}
+            className="px-3 py-2 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[var(--color-text-primary)] transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
+          >
+            👨‍🎓 Student
+          </button>
+        </div>
+      </div>
     </motion.div>
   );
 };

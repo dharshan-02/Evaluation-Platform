@@ -1,7 +1,7 @@
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const config = require('../config/env');
 
 /**
@@ -113,7 +113,7 @@ async function executeInDocker(code, language, input = '', timeLimit = 10000, me
  * Execute code using Docker (production mode).
  */
 async function executeWithDocker(code, language, langConfig, input, timeLimit, memoryLimit) {
-  const containerId = `eval-${uuidv4().slice(0, 8)}`;
+  const containerId = `eval-${crypto.randomUUID().slice(0, 8)}`;
   const tempDir = path.join(__dirname, '..', 'uploads', 'temp', containerId);
 
   try {
@@ -214,7 +214,7 @@ async function executeWithDocker(code, language, langConfig, input, timeLimit, m
  * WARNING: Less secure — only for development.
  */
 async function executeDirectly(code, language, langConfig, input, timeLimit) {
-  const tempDir = path.join(__dirname, '..', 'uploads', 'temp', uuidv4().slice(0, 8));
+  const tempDir = path.join(__dirname, '..', 'uploads', 'temp', crypto.randomUUID().slice(0, 8));
 
   try {
     fs.mkdirSync(tempDir, { recursive: true });
