@@ -1,20 +1,38 @@
-# 🎓 Automated Student Project Evaluation Hub
-
-<p align="center">
+<div align="center">
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white"/>
   <img src="https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js&logoColor=white"/>
   <img src="https://img.shields.io/badge/MongoDB-Database-47A248?style=for-the-badge&logo=mongodb&logoColor=white"/>
   <img src="https://img.shields.io/badge/Docker-Sandbox-2496ED?style=for-the-badge&logo=docker&logoColor=white"/>
   <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge"/>
-</p>
+  <br />
+  <br />
+  <h1>🎓 Automated Student Project Evaluation Hub</h1>
+  <p>
+    <b>A Secure Full Stack Web Platform for Automated Student Project Evaluation, Custom Plagiarism Detection, and Docker-Based Code Execution.</b>
+  </p>
+</div>
 
-<p align="center">
-<b>A Secure Full Stack Web Platform for Automated Student Project Evaluation, Custom Plagiarism Detection and Docker-Based Code Execution.</b>
-</p>
+<details>
+  <summary>📝 Table of Contents</summary>
+  <ol>
+    <li><a href="#-overview">Overview</a></li>
+    <li><a href="#-features">Features</a></li>
+    <li><a href="#-automated-code-evaluation">Automated Code Evaluation</a></li>
+    <li><a href="#-custom-plagiarism-detection">Custom Plagiarism Detection</a></li>
+    <li><a href="#-user-dashboards">User Dashboards</a></li>
+    <li><a href="#-tech-stack">Tech Stack</a></li>
+    <li><a href="#-demo-accounts">Demo Accounts</a></li>
+    <li><a href="#-getting-started">Getting Started</a></li>
+    <li><a href="#-project-structure">Project Structure</a></li>
+    <li><a href="#-future-enhancements">Future Enhancements</a></li>
+    <li><a href="#-contributing">Contributing</a></li>
+    <li><a href="#-license">License</a></li>
+  </ol>
+</details>
 
 ---
 
-# 📖 Overview
+## 📖 Overview
 
 The **Automated Student Project Evaluation Hub** is a production-ready web application designed to simplify project submission, automated assessment, plagiarism detection, and secure code execution for educational institutions.
 
@@ -22,400 +40,242 @@ Instead of manually downloading, compiling, and reviewing hundreds of student pr
 
 ---
 
-# ✨ Features
+## ✨ Features
 
-## 👥 Role-Based Authentication
+### 👥 Role-Based Authentication
+- ✔️ **JWT Authentication** for secure sessions.
+- ✔️ **Password Encryption** using `bcrypt`.
+- ✔️ **Role-based Dashboards** for 👑 Admin, 👨‍🏫 Faculty, and 👨‍🎓 Student.
 
-✔️ JWT Authentication
+### 📚 Assignment Management
+- ➕ **Create Assignments** with rich descriptions, deadlines, and marks allocation.
+- 💻 **Multi-language Support:** C, C++, Java, Python, JavaScript.
+- 📂 **Submission Methods:** ZIP file uploads & GitHub repository linking.
 
-✔️ Secure Password Encryption (bcrypt)
-
-✔️ Role-based Dashboard
-
-- 👑 Admin
-- 👨‍🏫 Faculty
-- 👨‍🎓 Student
-
----
-
-## 📚 Assignment Management
-
-- ➕ Create Assignments
-- 📝 Rich Assignment Description
-- 📅 Deadline Management
-- 🎯 Marks Allocation
-- 💻 Multi-language Support
-- 📂 ZIP & GitHub Submission
-
-Supported Languages
-
-- C
-- C++
-- Java
-- Python
-- JavaScript
+### 🎨 Modern User Interface
+- 📱 **Fully Responsive** design across all devices.
+- 💎 **Glassmorphism** aesthetics.
+- ✨ **Smooth Animations** powered by Framer Motion.
+- 🚀 **Fast Loading** built with React 18 & Vite.
 
 ---
 
 ## ⚡ Automated Code Evaluation
 
-Every submission goes through a secure evaluation pipeline.
+Every submission goes through a secure evaluation pipeline to ensure accurate and isolated testing.
 
-```text
-Student Submission
-        │
-        ▼
-Upload ZIP / GitHub Repository
-        │
-        ▼
-Compile Source Code
-        │
-        ▼
-Execute inside Docker Sandbox
-        │
-        ▼
-Run Public Test Cases
-        │
-        ▼
-Run Hidden Test Cases
-        │
-        ▼
-Compare Output
-        │
-        ▼
-Generate Score
+```mermaid
+graph TD
+    A[Student Submission] --> B{Upload ZIP / GitHub Repo}
+    B --> C[Compile Source Code]
+    C --> D[Execute inside Docker Sandbox]
+    D --> E[Run Public Test Cases]
+    E --> F[Run Hidden Test Cases]
+    F --> G[Compare Output]
+    G --> H((Generate Score))
+    
+    style D fill:#2496ED,stroke:#fff,stroke-width:2px,color:#fff
 ```
 
-### Features
-
-- 🐳 Docker Isolation
-- ⏱️ Execution Timeout
-- 💾 Memory Limits
-- ⚙️ CPU Restrictions
-- 🔒 Secure Execution
-- 📊 Automatic Score Calculation
+### 🐳 Docker Sandbox Capabilities
+- **Docker Isolation:** Complete separation from the host system.
+- **Execution Timeout:** Prevents infinite loops.
+- **Resource Limits:** Strict Memory & CPU restrictions.
+- **Secure Execution:** Read-only file systems where applicable.
 
 ---
 
-# 🕵️ Custom Plagiarism Detection
+## 🕵️ Custom Plagiarism Detection
 
-Unlike projects that rely on third-party APIs, this project includes a fully custom plagiarism detection engine.
+Unlike projects that rely on third-party APIs, this project includes a fully custom plagiarism detection engine built from the ground up.
 
-### Detection Pipeline
-
-```text
-Source Code
-      │
-      ▼
-Remove Comments
-      │
-      ▼
-Normalize Tokens
-      │
-      ▼
-Generate k-grams
-      │
-      ▼
-Winnowing Fingerprints
-      │
-      ▼
-Jaccard Similarity
-      │
-      ▼
-Similarity Report
+```mermaid
+graph LR
+    A[Source Code] --> B[Remove Comments]
+    B --> C[Normalize Tokens]
+    C --> D[Generate k-grams]
+    D --> E[Winnowing Fingerprints]
+    E --> F[Jaccard Similarity]
+    F --> G((Similarity Report))
+    
+    style E fill:#47A248,stroke:#fff,stroke-width:2px,color:#fff
 ```
 
-### Features
-
-- ✅ Winnowing Algorithm
-- ✅ Fingerprint Generation
-- ✅ Token Normalization
-- ✅ Jaccard Similarity
-- ✅ Similar Submission Ranking
-- ✅ Percentage-based Similarity Report
+### Detection Engine Features
+- ✅ **Winnowing Algorithm** for efficient fingerprinting.
+- ✅ **Token Normalization** to ignore variable renaming.
+- ✅ **Jaccard Similarity** for percentage-based scoring.
+- ✅ **Similar Submission Ranking** for easy faculty review.
 
 ---
 
-# 📊 Faculty Dashboard
+## 📊 User Dashboards
 
-Faculty members can
+### 👨‍🏫 Faculty Dashboard
+- 📈 View submission statistics and analyze class performance.
+- 📂 Access and review detailed plagiarism & evaluation reports.
+- 📥 Export PDF Reports for offline records.
+- 🔔 Receive real-time system notifications.
 
-- 📈 View submission statistics
-- 📊 Analyze class performance
-- 📂 View plagiarism reports
-- 📝 Review evaluation reports
-- 📥 Export PDF Reports
-- 🔔 Receive Notifications
+### 👨‍🎓 Student Dashboard
+- 📚 Browse active assignments and deadlines.
+- 📤 Upload projects (ZIP/GitHub) seamlessly.
+- 🧪 View test results, marks, and detailed evaluation reports.
+- 📄 Download generated PDF reports.
 
----
-
-# 👨‍🎓 Student Dashboard
-
-Students can
-
-- 📚 View Assignments
-- 📤 Upload Projects
-- 🧪 View Test Results
-- 📄 Download Reports
-- 📊 Check Marks
-- 🔔 Receive Submission Status
+### 👑 Admin Dashboard
+- 👥 Manage Users, Departments, and Courses.
+- 🔐 Control system permissions and access levels.
+- 📈 View platform analytics and system health.
+- ⚙️ Configure core system settings.
 
 ---
 
-# 👑 Admin Dashboard
-
-Admin can
-
-- 👥 Manage Users
-- 🏫 Manage Departments
-- 📚 Manage Courses
-- 🔐 Control Permissions
-- 📈 View Platform Analytics
-- ⚙️ Configure System Settings
-
----
-
-# 🎨 User Interface
-
-Modern UI built using
-
-- ⚛ React 18
-- ⚡ Vite
-- 🎨 Tailwind CSS
-- 🎭 Framer Motion
-- 📈 Chart.js
-
-Features
-
-
-- 📱 Fully Responsive
-- 💎 Glassmorphism
-- ✨ Smooth Animations
-- 🚀 Fast Loading
-
----
-
-# 🏗 Tech Stack
+## 🏗 Tech Stack
 
 | Category | Technology |
-|------------|------------|
-| Frontend | React 18, Vite, Tailwind CSS |
-| Backend | Node.js, Express.js |
-| Database | MongoDB + Mongoose |
-| Authentication | JWT + bcrypt |
-| File Upload | Multer |
-| Charts | Chart.js |
-| HTTP Client | Axios |
-| Animations | Framer Motion |
-| PDF Reports | PDFKit |
-| Sandbox | Docker |
-| Version Control | Git & GitHub |
+| :--- | :--- |
+| **Frontend** | React 18, Vite, Tailwind CSS |
+| **Backend** | Node.js, Express.js |
+| **Database** | MongoDB + Mongoose |
+| **Authentication** | JWT + bcrypt |
+| **File Handling** | Multer |
+| **Data Visualization** | Chart.js |
+| **HTTP Client** | Axios |
+| **Animations** | Framer Motion |
+| **PDF Generation** | PDFKit |
+| **Execution Sandbox** | Docker |
+| **Version Control** | Git & GitHub |
 
 ---
 
-# 📂 Project Structure
+## 🔐 Demo Accounts
+
+Experience the platform using these test credentials:
+
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| 👑 **Admin** | `admin@neovika.com` | `Admin@123` |
+| 👨‍🏫 **Faculty** | `sarah.j@neovika.com` | `Faculty@123` |
+| 👨‍🎓 **Student** | `alex@student.com` | `Student@123` |
+
+---
+
+## 🚀 Getting Started
+
+Follow these steps to set up the project locally.
+
+### 1. Clone Repository
+```bash
+git clone https://github.com/your-username/project-evaluation.git
+cd project-evaluation
+```
+
+### 2. Backend Setup
+Navigate to the server directory and install dependencies:
+```bash
+cd server
+npm install
+```
+
+Create a `.env` file in the `server` directory:
+```env
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/evaluationhub
+JWT_SECRET=your_super_secret_key
+JWT_EXPIRE=7d
+NODE_ENV=development
+```
+
+Start the backend development server:
+```bash
+npm run dev
+```
+
+### 3. Frontend Setup
+Open a new terminal, navigate to the client directory, and install dependencies:
+```bash
+cd client
+npm install
+npm run dev
+```
+
+---
+
+## 📂 Project Structure
+
+<details>
+<summary>Click to expand folder structure</summary>
 
 ```text
 Project Evaluation
 │
-├── client
-│   ├── src
-│   │   ├── assets
-│   │   ├── components
-│   │   ├── features
-│   │   ├── hooks
-│   │   ├── layouts
-│   │   ├── pages
-│   │   ├── services
-│   │   ├── utils
-│   │   └── styles
-│   │
-│   ├── public
+├── client/                 # React Frontend
+│   ├── src/
+│   │   ├── assets/         # Images, icons, etc.
+│   │   ├── components/     # Reusable UI components
+│   │   ├── features/       # Redux slices or context
+│   │   ├── hooks/          # Custom React hooks
+│   │   ├── layouts/        # Page layouts (Navbar, Sidebar)
+│   │   ├── pages/          # Main application pages
+│   │   ├── services/       # API call definitions
+│   │   ├── styles/         # Global CSS / Tailwind
+│   │   └── utils/          # Helper functions
+│   ├── public/
 │   └── vite.config.js
 │
-└── server
-    ├── config
-    ├── controllers
-    ├── middleware
-    ├── models
-    ├── routes
-    ├── services
-    ├── docker
-    ├── uploads
-    ├── utils
-    └── server.js
+└── server/                 # Node.js Backend
+    ├── config/             # DB & Environment configs
+    ├── controllers/        # Request handlers
+    ├── docker/             # Dockerfile templates & execution scripts
+    ├── middleware/         # Auth & Error handling
+    ├── models/             # Mongoose schemas
+    ├── routes/             # API endpoints
+    ├── services/           # Business logic (Evaluation, Plagiarism)
+    ├── uploads/            # Temporary storage for submissions
+    ├── utils/              # Helper functions
+    └── server.js           # Entry point
 ```
+</details>
 
 ---
 
-# 🔐 Demo Accounts
+## 📌 Future Enhancements
 
-| Role | Email | Password |
-|-------|--------|----------|
-| 👑 Admin | admin@neovika.com | Admin@123 |
-| 👨‍🏫 Faculty | sarah.j@neovika.com | Faculty@123 |
-| 👨‍🎓 Student | alex@student.com | Student@123 |
-
----
-
-# 🚀 Installation
-
-## Clone Repository
-
-```bash
-git clone https://github.com/your-username/project-evaluation.git
-
-cd project-evaluation
-```
+- [ ] 🤖 **AI-based Code Review**
+- [ ] ☁ **Cloud Deployment** (AWS/GCP)
+- [ ] 📧 **Email Notifications**
+- [ ] 📱 **Mobile Application**
+- [ ] 🎥 **Viva Scheduling Integration**
+- [ ] 💬 **Real-time Chat Support**
+- [ ] 🔗 **GitHub Classroom Integration**
+- [ ] 📡 **WebSocket Notifications**
 
 ---
 
-## Backend Setup
+## 🤝 Contributing
 
-```bash
-cd server
+Contributions are always welcome! Whether it's reporting a bug, discussing improvements, or submitting a pull request.
 
-npm install
-```
-
-Create **.env**
-
-```env
-PORT=5000
-
-MONGODB_URI=mongodb://localhost:27017/evaluationhub
-
-JWT_SECRET=your-secret-key
-
-JWT_EXPIRE=7d
-
-NODE_ENV=development
-```
-
-Run Backend
-
-```bash
-npm run dev
-```
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
-## Frontend Setup
+## ⭐ Support
 
-```bash
-cd client
-
-npm install
-
-npm run dev
-```
+If you found this project useful or learned something new, please consider giving it a ⭐! 
+Fork the repository and contribute to making it even better.
 
 ---
 
-# 🐳 Docker Sandbox
+## 📜 License
 
-The execution pipeline follows
-
-```text
-Upload Submission
-        │
-        ▼
-Create Temporary Docker Container
-        │
-        ▼
-Compile Code
-        │
-        ▼
-Execute Test Cases
-        │
-        ▼
-Capture Output
-        │
-        ▼
-Destroy Container
-```
-
-Benefits
-
-- 🔒 Secure Execution
-- 🚫 Prevent Infinite Loops
-- 🧹 Temporary Environment
-- 💾 Memory Isolation
-- ⚡ Fast Evaluation
-
----
-
-# 📄 Generated Reports
-
-The system automatically generates
-
-- 📊 Evaluation Report
-- 📑 Submission Report
-- 📈 Performance Report
-- 📝 Plagiarism Report
-- 📄 PDF Download
-
----
-
-# 📌 Future Enhancements
-
-- 🤖 AI-based Code Review
-- ☁ Cloud Deployment
-- 📧 Email Notifications
-- 📱 Mobile Application
-- 🎥 Viva Scheduling
-- 💬 Real-time Chat
-- 🔗 GitHub Classroom Integration
-- 📡 WebSocket Notifications
-
----
-
-# 🤝 Contributing
-
-Contributions are always welcome.
-
-1. Fork this repository
-
-2. Create a new branch
-
-```bash
-git checkout -b feature/new-feature
-```
-
-3. Commit changes
-
-```bash
-git commit -m "Added new feature"
-```
-
-4. Push
-
-```bash
-git push origin feature/new-feature
-```
-
-5. Create Pull Request
-
----
-
-# ⭐ Support
-
-If you found this project useful,
-
-⭐ Star this repository
-
-🍴 Fork the repository
-
-🛠 Contribute to improve it
-
----
-
-# 📜 License
-
-This project is licensed under the **MIT License**.
-
----
+Distributed under the MIT License. See `LICENSE` for more information.
 
 <p align="center">
-Made with ❤️ using React • Node.js • MongoDB • Docker
+  <i>Made with ❤️ using React • Node.js • MongoDB • Docker</i>
 </p>
