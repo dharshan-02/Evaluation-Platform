@@ -178,20 +178,20 @@ const DashboardLayout = () => {
                 onClick={() => setMobileSidebarOpen(false)}
                 className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group overflow-hidden ${
                   isActive 
-                    ? 'text-[var(--color-text-primary)] bg-[var(--color-bg-hover)] shadow-xs font-medium' 
-                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]'
+                    ? 'text-blue-600 dark:text-sky-400 bg-blue-50/80 dark:bg-blue-950/40 shadow-xs font-semibold' 
+                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-blue-600 dark:hover:text-sky-300'
                 }`}
                 title={!sidebarOpen ? item.label : undefined}
               >
                 {isActive && (
                   <motion.div 
                     layoutId="activeNavIndicator"
-                    className="absolute inset-0 border-l-2 border-[var(--color-text-primary)] z-0"
+                    className="absolute inset-0 border-l-2 border-blue-600 dark:border-sky-400 z-0 bg-blue-50/50 dark:bg-blue-900/20"
                     initial={false}
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
-                <Icon className={`w-5 h-5 shrink-0 z-10 transition-colors ${isActive ? 'text-[var(--color-text-primary)]' : ''}`} />
+                <Icon className={`w-5 h-5 shrink-0 z-10 transition-colors ${isActive ? 'text-blue-600 dark:text-sky-400' : ''}`} />
                 <AnimatePresence>
                   {sidebarOpen && (
                     <motion.span
@@ -253,9 +253,9 @@ const DashboardLayout = () => {
             </div>
 
             <div className="hidden md:flex flex-1 max-w-md ml-8 relative group">
-              <div className={`absolute inset-0 rounded-lg blur transition-opacity duration-300 ${searchFocused ? 'opacity-20' : 'opacity-0'}`} style={{background: 'var(--color-text-primary)'}}></div>
+              <div className={`absolute inset-0 rounded-lg blur transition-opacity duration-300 ${searchFocused ? 'opacity-25' : 'opacity-0'}`} style={{background: 'var(--color-brand)'}}></div>
               <div className="relative flex items-center w-full">
-                <HiOutlineSearch className={`absolute left-3 w-5 h-5 transition-colors ${searchFocused ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'}`} />
+                <HiOutlineSearch className={`absolute left-3 w-5 h-5 transition-colors ${searchFocused ? 'text-blue-600 dark:text-sky-400' : 'text-[var(--color-text-muted)]'}`} />
                 <input
                   type="text"
                   placeholder="Search assignments, students, or reports..."
@@ -275,7 +275,7 @@ const DashboardLayout = () => {
               {theme === 'dark' ? (
                 <HiOutlineSun className="w-5 h-5 group-hover:text-amber-500 transition-colors" />
               ) : (
-                <HiOutlineMoon className="w-5 h-5 group-hover:text-indigo-500 transition-colors" />
+                <HiOutlineMoon className="w-5 h-5 group-hover:text-blue-600 transition-colors" />
               )}
             </button>
 
@@ -283,7 +283,7 @@ const DashboardLayout = () => {
               onClick={() => navigate('/notifications')}
               className="relative p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] transition-colors group"
             >
-              <HiOutlineBell className="w-5 h-5 group-hover:text-indigo-500 transition-colors" />
+              <HiOutlineBell className="w-5 h-5 group-hover:text-blue-600 dark:group-hover:text-sky-400 transition-colors" />
               {unreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
               )}
@@ -293,8 +293,8 @@ const DashboardLayout = () => {
               onClick={() => navigate('/profile')}
               className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg border border-transparent hover:border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] transition-all cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-md bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] flex items-center justify-center">
-                <span className="text-xs font-bold uppercase">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-blue-500 to-sky-400 text-white flex items-center justify-center shadow-sm font-semibold">
+                <span className="text-xs font-bold uppercase tracking-tight">
                   {user?.name?.substring(0, 2) || 'UN'}
                 </span>
               </div>

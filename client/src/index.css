@@ -8,79 +8,80 @@
    ============================================================ */
 
 :root {
-  /* Colors — Light Mode (Ultra-Minimalist & Apple-inspired) */
+  /* Colors — Light Mode (Clean, vibrant Royal Blue & Sky SaaS) */
   --color-bg-primary: #FFFFFF; 
-  --color-bg-secondary: #F5F5F7; 
+  --color-bg-secondary: #F8FAFC; 
   --color-bg-elevated: #FFFFFF;
-  --color-bg-hover: #EAEAEB;
+  --color-bg-hover: #F1F5F9;
   
-  --color-text-primary: #1D1D1F; 
-  --color-text-secondary: #86868B;
-  --color-text-muted: #A1A1A6;
+  --color-text-primary: #0F172A; 
+  --color-text-secondary: #475569;
+  --color-text-muted: #94A3B8;
   
-  --color-border: #D2D2D7;
-  --color-border-light: #E5E5EA;
-  --color-border-focus: #007AFF;
+  --color-border: #E2E8F0;
+  --color-border-light: #F1F5F9;
+  --color-border-focus: #2563EB;
 
-  /* Brand Colors */
-  --color-brand: #1D1D1F;
-  --color-brand-light: #86868B;
-  --color-brand-dark: #000000;
-  --color-brand-bg: rgba(29, 29, 31, 0.04);
+  /* Brand Colors (Royal Blue & Sky Accent) */
+  --color-brand: #2563EB;
+  --color-brand-light: #0EA5E9;
+  --color-brand-dark: #1D4ED8;
+  --color-brand-bg: rgba(37, 99, 235, 0.08);
 
   /* Accents */
-  --color-cyan: #5AC8FA;
-  --color-amber: #FF9500;
-  --color-emerald: #34C759;
-  --color-rose: #FF3B30;
+  --color-cyan: #0EA5E9;
+  --color-amber: #F59E0B;
+  --color-emerald: #10B981;
+  --color-rose: #EF4444;
   
   /* Gradients */
-  --gradient-brand: linear-gradient(135deg, #1D1D1F 0%, #434346 100%);
-  --gradient-glass: linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.65) 100%);
-  --gradient-mesh: radial-gradient(at 50% -20%, rgba(0, 0, 0, 0.03) 0%, transparent 60%);
+  --gradient-brand: linear-gradient(135deg, #1D4ED8 0%, #2563EB 50%, #0EA5E9 100%);
+  --gradient-glass: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.75) 100%);
+  --gradient-mesh: radial-gradient(at 50% -20%, rgba(37, 99, 235, 0.08) 0%, rgba(14, 165, 233, 0.04) 40%, transparent 70%);
 }
 
 .dark {
-  /* DARK MODE (Ultra-Minimalist) */
-  --color-bg-primary: #000000;
-  --color-bg-secondary: #1C1C1E;
-  --color-bg-elevated: #2C2C2E;
-  --color-bg-hover: #3A3A3C;
+  /* DARK MODE (Deep Rich Navy Slate with Royal Blue & Sky) */
+  --color-bg-primary: #0B0F19;
+  --color-bg-secondary: #111827;
+  --color-bg-elevated: #1F2937;
+  --color-bg-hover: #1E293B;
   
-  --color-text-primary: #F5F5F7;
-  --color-text-secondary: #86868B;
-  --color-text-muted: #636366;
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
   
-  --color-border: #38383A;
-  --color-border-light: #2C2C2E;
-  --color-border-focus: #0A84FF;
+  --color-border: #1E293B;
+  --color-border-light: #334155;
+  --color-border-focus: #38BDF8;
 
-  --color-brand: #FFFFFF;
-  --color-brand-light: #98989D;
-  --color-brand-dark: #FFFFFF;
-  --color-brand-bg: rgba(255, 255, 255, 0.08);
+  --color-brand: #3B82F6;
+  --color-brand-light: #38BDF8;
+  --color-brand-dark: #2563EB;
+  --color-brand-bg: rgba(59, 130, 246, 0.12);
 
-  --color-cyan: #64D2FF;
-  --color-amber: #FF9F0A;
-  --color-emerald: #30D158;
-  --color-rose: #FF453A;
+  --color-cyan: #38BDF8;
+  --color-amber: #FBBF24;
+  --color-emerald: #34D399;
+  --color-rose: #F87171;
   
-  --gradient-brand: linear-gradient(135deg, #FFFFFF 0%, #A1A1A6 100%);
-  --gradient-glass: linear-gradient(180deg, rgba(28, 28, 30, 0.7) 0%, rgba(28, 28, 30, 0.4) 100%);
-  --gradient-mesh: radial-gradient(at 50% -20%, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
+  --gradient-brand: linear-gradient(135deg, #2563EB 0%, #3B82F6 50%, #38BDF8 100%);
+  --gradient-glass: linear-gradient(180deg, rgba(17, 24, 39, 0.85) 0%, rgba(17, 24, 39, 0.6) 100%);
+  --gradient-mesh: radial-gradient(at 50% -20%, rgba(37, 99, 235, 0.18) 0%, rgba(14, 165, 233, 0.08) 40%, transparent 70%);
 }
 
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   
-  /* Shadows (Soft and wide) */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 16px 64px rgba(0, 0, 0, 0.12);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.08);
-  --shadow-glow: 0 0 20px rgba(0, 122, 255, 0.15);
+  /* Shadows (Soft and wide with blue-tinted depth) */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 8px 32px rgba(15, 23, 42, 0.1);
+  --shadow-xl: 0 16px 64px rgba(15, 23, 42, 0.12);
+  --shadow-glass: 0 8px 32px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 0 24px rgba(37, 99, 235, 0.28);
+  --shadow-glow-sky: 0 0 24px rgba(14, 165, 233, 0.28);
 
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -162,25 +163,25 @@ body {
   transform: translateY(-2px);
 }
 
-/* Subtler Borders for dark mode */
+/* Subtler Borders & Royal-Slate Tints for dark mode */
 .dark .glass {
-  background: rgba(18, 18, 18, 0.4);
+  background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(20px);
-  border-color: var(--color-border);
+  border-color: rgba(30, 41, 59, 0.8);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .dark .glass-panel {
-  background: rgba(24, 24, 27, 0.4);
+  background: rgba(17, 24, 39, 0.65);
   backdrop-filter: blur(24px);
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
 .dark .glass-panel:hover {
-  border-color: rgba(255,255,255,0.15);
-  background: rgba(39, 39, 42, 0.5);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  border-color: rgba(56, 189, 248, 0.25);
+  background: rgba(30, 41, 59, 0.7);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.5);
 }
 
 /* ---------- Form Inputs & Buttons ---------- */
@@ -194,30 +195,55 @@ body {
 }
 
 .dark .input-field {
-  background: rgba(0,0,0,0.2);
+  background: rgba(15, 23, 42, 0.45);
+  border-color: #1E293B;
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
 }
 
 .input-field:focus {
-  border-color: var(--color-text-primary);
+  border-color: #2563EB;
   outline: none;
-  box-shadow: 0 0 0 1px var(--color-text-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
   background: var(--color-bg-elevated);
 }
 
+.dark .input-field:focus {
+  border-color: #38BDF8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
 .btn-primary {
-  background: var(--color-text-primary);
-  color: var(--color-bg-primary);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  color: #FFFFFF;
   font-weight: 600;
   border-radius: 8px;
   padding: 0.5rem 1rem;
   transition: all var(--transition-base);
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
 }
 
 .btn-primary:hover {
-  transform: scale(0.98);
-  opacity: 0.9;
+  background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+.dark .btn-primary {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 14px rgba(59, 130, 246, 0.35);
+}
+
+.dark .btn-primary:hover {
+  background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
 }
 
 .btn-secondary {
@@ -231,7 +257,14 @@ body {
 }
 
 .btn-secondary:hover {
-  background: var(--color-border);
+  background: var(--color-bg-hover);
+  border-color: rgba(37, 99, 235, 0.3);
+  color: #2563EB;
+}
+
+.dark .btn-secondary:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38BDF8;
 }
 
 /* ---------- Micro-Animations ---------- */
@@ -290,6 +323,6 @@ body {
 
 /* Remove default focus ring outline for cleaner look */
 *:focus-visible {
-  outline: 2px solid var(--color-text-primary);
+  outline: 2px solid var(--color-brand);
   outline-offset: 2px;
 }
