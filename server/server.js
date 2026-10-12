@@ -14,8 +14,25 @@ const app = express();
 // --------------- Middleware ---------------
 
 // CORS - allow frontend dev server and production Vercel
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://d-evaluation-platform-teal.vercel.app',
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'https://d-evaluation-platform-teal.vercel.app'],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app') ||
+      origin.includes('localhost')
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
