@@ -22,12 +22,15 @@ import {
   HiOutlineUpload,
   HiOutlineExternalLink,
   HiOutlineFolder,
-  HiOutlinePaperClip
+  HiOutlinePaperClip,
+  HiOutlineSparkles,
+  HiOutlineX
 } from 'react-icons/hi';
 import { FaGithub } from 'react-icons/fa';
 import { HiArrowsPointingOut, HiArrowsPointingIn } from 'react-icons/hi2';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import ReactMarkdown from 'react-markdown';
 
 // Helper to format inline code backticks in problem descriptions like LeetCode
 const renderFormattedText = (text) => {
@@ -156,6 +159,32 @@ const AssignmentDetailsPage = () => {
   const [customTestCases, setCustomTestCases] = useState([]);
   const [bottomPanelCollapsed, setBottomPanelCollapsed] = useState(false);
   const [bottomPanelFullscreen, setBottomPanelFullscreen] = useState(false);
+
+  // AI Review state
+  const [aiReview, setAiReview] = useState(null);
+  const [isReviewingAI, setIsReviewingAI] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+
+  const handleAIReview = async () => {
+    if (!code.trim()) {
+      toast.error('Please write some code first before requesting an AI review!');
+      return;
+    }
+    try {
+      setIsReviewingAI(true);
+      setShowAIModal(true);
+      const res = await api.post('/ai/review', {
+        code,
+        language
+      });
+      setAiReview(res.data.review);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate AI code review');
+    } finally {
+      setIsReviewingAI(false);
+    }
+  };
 
   // Initialize custom test cases from assignment's public test cases
   useEffect(() => {
@@ -1262,15 +1291,35 @@ const AssignmentDetailsPage = () => {
               </div>
               <div className="flex items-center gap-2">
                 {user.role !== 'student' ? (
-                  <span className="text-xs font-medium text-[#888] px-2.5 py-1 bg-[#2a2a2a] rounded border border-[#3e3e3e]">
-                    Admin Preview Mode
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleAIReview}
+                      disabled={isReviewingAI}
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold text-[#eff1f6] bg-[#2e2e2e] hover:bg-[#3a3a3a] active:scale-95 transition-all border border-[#444] cursor-pointer"
+                      title="AI Complexity & Quality Review"
+                    >
+                      <HiOutlineSparkles className="w-3.5 h-3.5 text-amber-400" />
+                      AI Review
+                    </button>
+                    <span className="text-xs font-medium text-[#888] px-2.5 py-1 bg-[#2a2a2a] rounded border border-[#3e3e3e]">
+                      Admin Preview Mode
+                    </span>
+                  </div>
                 ) : canSubmit ? (
                   <>
                     <button
+                      onClick={handleAIReview}
+                      disabled={submitting || isReviewingAI}
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold text-[#eff1f6] bg-[#2e2e2e] hover:bg-[#3a3a3a] active:scale-95 transition-all border border-[#444] disabled:opacity-50 cursor-pointer"
+                      title="AI Complexity & Quality Review"
+                    >
+                      <HiOutlineSparkles className="w-3.5 h-3.5 text-amber-400" />
+                      AI Review
+                    </button>
+                    <button
                       onClick={handleRunCode}
                       disabled={submitting}
-                      className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold text-[#eff1f6] bg-[#2e2e2e] hover:bg-[#3a3a3a] active:scale-95 transition-all border border-[#444] disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold text-[#eff1f6] bg-[#2e2e2e] hover:bg-[#3a3a3a] active:scale-95 transition-all border border-[#444] disabled:opacity-50 cursor-pointer"
                     >
                       <HiOutlinePlay className="w-3.5 h-3.5 text-emerald-400" />
                       Run
@@ -1278,7 +1327,7 @@ const AssignmentDetailsPage = () => {
                     <button
                       onClick={handleSubmitCode}
                       disabled={submitting}
-                      className="flex items-center gap-1.5 px-3.5 py-1 rounded-md text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 transition-all shadow-sm shadow-emerald-900/30 disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-3.5 py-1 rounded-md text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 transition-all shadow-sm shadow-emerald-900/30 disabled:opacity-50 cursor-pointer"
                     >
                       {submitting ? (
                         <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -1581,6 +1630,74 @@ const AssignmentDetailsPage = () => {
           </>
         )}
       </div>
+
+      {/* AI Code Review Modal */}
+      <AnimatePresence>
+        {showAIModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#1e1e1e] border border-[#3e3e3e] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+            >
+              <div className="px-5 py-4 border-b border-[#2e2e2e] flex items-center justify-between bg-[#252525]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                    <HiOutlineSparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white tracking-tight">AI Complexity & Quality Review</h3>
+                    <p className="text-[11px] text-[#888]">Algorithmic breakdown for {language.toUpperCase()}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAIModal(false)}
+                  className="p-1 rounded-lg text-[#888] hover:text-white transition-colors cursor-pointer"
+                >
+                  <HiOutlineX className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-5 overflow-y-auto flex-1 space-y-4 text-xs sm:text-sm text-[#d4d4d4] leading-relaxed scrollbar-thin">
+                {isReviewingAI ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3">
+                    <div className="w-8 h-8 border-3 border-amber-500/30 border-t-amber-400 rounded-full animate-spin" />
+                    <p className="text-xs text-[#aaa] font-medium animate-pulse">Analyzing AST, complexity curves, and code smells...</p>
+                  </div>
+                ) : aiReview ? (
+                  <div className="prose prose-invert prose-xs sm:prose-sm max-w-none prose-headings:text-amber-300 prose-headings:font-bold prose-headings:mb-2 prose-p:my-1.5 prose-strong:text-white prose-pre:bg-[#121212] prose-pre:border prose-pre:border-[#2e2e2e]">
+                    <ReactMarkdown>{aiReview}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#888]">No review data available.</p>
+                )}
+              </div>
+
+              <div className="px-5 py-3 border-t border-[#2e2e2e] bg-[#252525] flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    if (aiReview) {
+                      navigator.clipboard.writeText(aiReview);
+                      toast.success('AI Review copied to clipboard!');
+                    }
+                  }}
+                  disabled={isReviewingAI || !aiReview}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#333] hover:bg-[#444] text-[#ddd] transition-colors disabled:opacity-40 cursor-pointer"
+                >
+                  Copy Review
+                </button>
+                <button
+                  onClick={() => setShowAIModal(false)}
+                  className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-colors cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

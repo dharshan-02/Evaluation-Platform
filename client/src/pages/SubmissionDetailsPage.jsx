@@ -101,7 +101,7 @@ const SubmissionDetailsPage = () => {
         manualGradeFeedback
       });
       setSubmission(res.data.submission);
-      // Optional: Add a success toast here
+      toast.success('Grade and feedback submitted successfully!');
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || 'Failed to submit grade');

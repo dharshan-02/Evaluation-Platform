@@ -26,6 +26,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useSocket } from '../hooks/useSocket';
 import { useTheme } from '../hooks/useTheme';
 import api from '../lib/api';
+import AITutorWidget from '../components/AITutorWidget';
 
 const navItems = [
   { label: 'Dashboard', icon: HiOutlineHome, path: '/dashboard', roles: ['admin', 'faculty', 'student'] },
@@ -252,36 +253,41 @@ const DashboardLayout = () => {
               </h1>
             </div>
 
-            <div className="hidden md:flex flex-1 max-w-md ml-8 relative group">
-              <div className={`absolute inset-0 rounded-lg blur transition-opacity duration-300 ${searchFocused ? 'opacity-25' : 'opacity-0'}`} style={{background: 'var(--color-brand)'}}></div>
-              <div className="relative flex items-center w-full">
-                <HiOutlineSearch className={`absolute left-3 w-5 h-5 transition-colors ${searchFocused ? 'text-blue-600 dark:text-sky-400' : 'text-[var(--color-text-muted)]'}`} />
-                <input
-                  type="text"
-                  placeholder="Search assignments, students, or reports..."
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setSearchFocused(false)}
-                  className="input-field w-full pl-10 pr-4 py-1.5"
-                />
-              </div>
+            {/* Command Palette Trigger */}
+            <div className="hidden md:flex flex-1 max-w-md ml-8">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
+                className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 hover:border-blue-500/50 dark:hover:border-sky-400/50 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-2xs group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <HiOutlineSearch className="w-4 h-4 text-slate-400 group-hover:text-blue-500 dark:group-hover:text-sky-400 transition-colors" />
+                  <span className="font-medium text-slate-500 dark:text-slate-400">Search commands, pages, actions...</span>
+                </div>
+                <kbd className="flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-bold text-slate-400 dark:text-slate-300 bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-700 shadow-2xs">
+                  <span>⌘</span><span>K</span>
+                </kbd>
+              </button>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 ml-4">
             <button
               onClick={toggleTheme}
-              className="relative p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] transition-colors group"
+              className="relative p-2 rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] transition-colors group cursor-pointer"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {theme === 'dark' ? (
-                <HiOutlineSun className="w-5 h-5 group-hover:text-amber-500 transition-colors" />
+                <HiOutlineSun className="w-5 h-5 text-amber-400 group-hover:rotate-45 transition-transform" />
               ) : (
-                <HiOutlineMoon className="w-5 h-5 group-hover:text-blue-600 transition-colors" />
+                <HiOutlineMoon className="w-5 h-5 text-blue-600 group-hover:-rotate-12 transition-transform" />
               )}
             </button>
 
             <button
               onClick={() => navigate('/notifications')}
-              className="relative p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] transition-colors group"
+              className="relative p-2 rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] transition-colors group cursor-pointer"
+              title="Notifications"
             >
               <HiOutlineBell className="w-5 h-5 group-hover:text-blue-600 dark:group-hover:text-sky-400 transition-colors" />
               {unreadCount > 0 && (
@@ -291,16 +297,17 @@ const DashboardLayout = () => {
 
             <button
               onClick={() => navigate('/profile')}
-              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg border border-transparent hover:border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] transition-all cursor-pointer"
+              className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl border border-transparent hover:border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] transition-all cursor-pointer group"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-blue-500 to-sky-400 text-white flex items-center justify-center shadow-sm font-semibold">
+              <div className="relative w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-400 text-white flex items-center justify-center shadow-xs font-semibold">
                 <span className="text-xs font-bold uppercase tracking-tight">
                   {user?.name?.substring(0, 2) || 'UN'}
                 </span>
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-sm font-semibold text-[var(--color-text-primary)] leading-none">{user?.name?.split(' ')[0]}</p>
-                <p className="text-xs text-[var(--color-text-muted)] capitalize">{user?.role}</p>
+                <p className="text-sm font-semibold text-[var(--color-text-primary)] leading-none group-hover:text-blue-600 dark:group-hover:text-sky-400 transition-colors">{user?.name?.split(' ')[0]}</p>
+                <p className="text-[11px] text-[var(--color-text-muted)] capitalize mt-0.5">{user?.role}</p>
               </div>
             </button>
           </div>
@@ -310,16 +317,19 @@ const DashboardLayout = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 20, scale: 0.98, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -20, scale: 1.02, filter: 'blur(4px)' }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 16, scale: 0.99 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -16, scale: 1.01 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
               className="h-full"
             >
               <Outlet />
             </motion.div>
           </AnimatePresence>
         </div>
+
+        {/* Floating AI Tutor Assistant across workspace */}
+        <AITutorWidget />
       </main>
     </div>
   );

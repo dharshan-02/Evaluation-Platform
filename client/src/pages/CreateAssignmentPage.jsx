@@ -14,7 +14,6 @@ const CreateAssignmentPage = () => {
     description: '',
     course: '',
     dueDate: '',
-    dueDate: '',
     type: 'code',
     memoryLimit: 256,
     timeLimit: 5,

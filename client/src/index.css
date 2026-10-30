@@ -308,9 +308,78 @@ body {
 }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
+/* ---------- Modern Pro Card & Hover Effects ---------- */
+.card-pro {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-pro:hover {
+  border-color: rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -10px rgba(37, 99, 235, 0.15);
+}
+
+.dark .card-pro {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  border-color: rgba(30, 41, 59, 0.8);
+}
+
+.dark .card-pro:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(56, 189, 248, 0.15);
+}
+
+/* Gradient Text Helper */
+.gradient-text {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glowing Accent Line */
+.accent-line-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gradient-brand);
+}
+
+/* Pulse Dot */
+.pulse-dot {
+  position: relative;
+  display: inline-flex;
+  border-radius: 9999px;
+  height: 0.5rem;
+  width: 0.5rem;
+}
+.pulse-dot::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.75;
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
 /* Command Palette Overlay */
 [cmdk-overlay] {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(8px);
 }
 [cmdk-dialog] {

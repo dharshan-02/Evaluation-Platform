@@ -5,9 +5,12 @@ import api from '../lib/api';
 import { 
   HiOutlineDocumentDownload,
   HiOutlineDocumentReport,
-  HiOutlineClipboardList
+  HiOutlineClipboardList,
+  HiOutlineCheckCircle,
+  HiOutlineShieldCheck
 } from 'react-icons/hi';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 
 const ReportsPage = () => {
   const { user } = useAuth();
@@ -29,7 +32,11 @@ const ReportsPage = () => {
     try {
       setLoading(true);
       const res = await api.get('/assignments');
-      setAssignments(res.data.assignments);
+      const list = res.data.assignments || [];
+      setAssignments(list);
+      if (list.length > 0) {
+        loadAssignmentReports(list[0]._id);
+      }
     } catch (err) {
       console.error(err);
       setError('Failed to load assignments');
@@ -44,9 +51,8 @@ const ReportsPage = () => {
       setSelectedAssignment(assignmentId);
       
       const subsRes = await api.get(`/submissions?assignmentId=${assignmentId}&status=evaluated&limit=100`);
-      setSubmissions(subsRes.data.submissions);
+      setSubmissions(subsRes.data.submissions || []);
 
-      // Only faculty and admins can view plagiarism reports
       if (user?.role !== 'student') {
         const plagRes = await api.get(`/plagiarism/assignment/${assignmentId}`);
         setPlagiarismReports(plagRes.data.reports || []);
@@ -62,14 +68,7 @@ const ReportsPage = () => {
   };
 
   const downloadSubmissionReport = (submissionId) => {
-    // We can just open the API URL directly, and the browser will download it since it returns a PDF
-    const token = localStorage.getItem('token');
-    if (token) {
-      window.open(`/api/reports/submission/${submissionId}?token=${token}`, '_blank');
-      // Actually, standard window.open doesn't attach auth headers easily. 
-      // Instead, we can fetch the blob and trigger a download.
-      downloadPdfBlob(`/reports/submission/${submissionId}`, `submission_report_${submissionId}.pdf`);
-    }
+    downloadPdfBlob(`/reports/submission/${submissionId}`, `submission_report_${submissionId}.pdf`);
   };
 
   const downloadPlagiarismReport = (reportId) => {
@@ -77,6 +76,7 @@ const ReportsPage = () => {
   };
 
   const downloadPdfBlob = async (url, filename) => {
+    const toastId = toast.loading('Compiling and generating PDF report...');
     try {
       const response = await api.get(url, { responseType: 'blob' });
       const blob = new Blob([response.data], { type: 'application/pdf' });
@@ -87,51 +87,60 @@ const ReportsPage = () => {
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);
+      toast.success('PDF report downloaded successfully!', { id: toastId });
     } catch (err) {
       console.error('Failed to download PDF', err);
-      alert('Failed to download PDF.');
+      toast.error('Failed to generate PDF report', { id: toastId });
     }
   };
 
-
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <HiOutlineDocumentReport className="w-6 h-6 text-indigo-500" />
-          PDF Reports Hub
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Generate and download official PDF evaluation and plagiarism reports.
-        </p>
+    <div className="max-w-7xl mx-auto space-y-8 animate-fade-in pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[var(--color-border)]">
+        <div>
+          <h1 className="text-3xl font-black text-[var(--color-text-primary)] tracking-tight flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 text-white flex items-center justify-center shadow-sm">
+              <HiOutlineDocumentReport className="w-6 h-6" />
+            </div>
+            Academic PDF Reports Hub
+          </h1>
+          <p className="text-sm font-medium text-[var(--color-text-secondary)] mt-2">
+            Generate and export signed verification PDF dossiers for student submissions and similarity scans.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Assignment Selection */}
-        <div className="glass rounded-2xl p-6 h-[fit-content]">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-200 dark:border-slate-700/50 pb-3">
-            Select Assignment
+        <div className="card-pro p-5 flex flex-col h-[fit-content]">
+          <h3 className="text-base font-bold text-[var(--color-text-primary)] mb-3 pb-2 border-b border-[var(--color-border)] flex items-center justify-between">
+            <span>Select Assignment</span>
+            <span className="text-xs font-semibold text-slate-400">{assignments.length} total</span>
           </h3>
-          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+          <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1 scrollbar-thin">
             {loading && !selectedAssignment ? (
               <div className="text-center py-10">
-                <div className="w-6 h-6 border-2 border-slate-200 dark:border-slate-700 border-t-indigo-500 rounded-full animate-spin mx-auto"></div>
+                <div className="w-6 h-6 border-2 border-slate-200 dark:border-slate-700 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
               </div>
             ) : (
               assignments.map(a => (
                 <button
                   key={a._id}
                   onClick={() => loadAssignmentReports(a._id)}
-                  className={`w-full text-left p-3 rounded-xl border transition-all ${
+                  className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer ${
                     selectedAssignment === a._id 
-                      ? 'border-indigo-500 bg-indigo-500/10' 
-                      : 'border-slate-200 dark:border-slate-700 hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 shadow-xs' 
+                      : 'border-[var(--color-border)] hover:border-blue-500/40 hover:bg-[var(--color-bg-hover)]'
                   }`}
                 >
-                  <div className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1">{a.title}</div>
-                  <div className="text-xs text-slate-500 mt-1">{a.course}</div>
+                  <div className="font-bold text-sm text-[var(--color-text-primary)] line-clamp-1">{a.title}</div>
+                  <div className="text-xs text-[var(--color-text-secondary)] mt-1 font-medium">{a.course}</div>
                 </button>
               ))
+            )}
+            {!loading && assignments.length === 0 && (
+              <div className="text-center py-6 text-[var(--color-text-secondary)] text-sm font-medium">No assignments found.</div>
             )}
           </div>
         </div>
@@ -139,39 +148,46 @@ const ReportsPage = () => {
         {/* Right Column: Reports */}
         <div className="lg:col-span-2 space-y-6">
           {!selectedAssignment ? (
-            <div className="glass rounded-2xl p-6 h-[400px] flex flex-col items-center justify-center text-slate-400">
-              <HiOutlineClipboardList className="w-16 h-16 mb-4 opacity-50" />
-              <p>Select an assignment to view available reports.</p>
+            <div className="card-pro p-16 flex flex-col items-center justify-center text-slate-400 min-h-[350px]">
+              <HiOutlineClipboardList className="w-16 h-16 mb-4 opacity-40 text-blue-500" />
+              <p className="text-sm font-semibold text-[var(--color-text-secondary)]">Select an assignment to view available reports.</p>
             </div>
           ) : loadingDetails ? (
-            <div className="glass rounded-2xl p-6 h-[400px] flex justify-center items-center">
-              <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
+            <div className="card-pro p-16 flex justify-center items-center min-h-[350px]">
+              <div className="w-8 h-8 border-3 border-[var(--color-border)] border-t-blue-600 rounded-full animate-spin"></div>
             </div>
           ) : (
             <>
               {/* Submission Reports */}
-              <div className="glass rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-200 dark:border-slate-700/50 pb-3 flex justify-between items-center">
+              <div className="card-pro p-6">
+                <h3 className="text-base font-bold text-[var(--color-text-primary)] mb-4 border-b border-[var(--color-border)] pb-3 flex justify-between items-center">
                   <span>Student Evaluation Reports</span>
-                  <span className="text-xs font-semibold bg-indigo-500/10 text-indigo-500 px-2 py-1 rounded-md">{submissions.length}</span>
+                  <span className="text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-sky-300 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                    {submissions.length} Evaluated
+                  </span>
                 </h3>
                 
                 {submissions.length === 0 ? (
-                  <p className="text-sm text-slate-500 text-center py-6">No evaluated submissions found for this assignment.</p>
+                  <div className="text-center py-10 text-[var(--color-text-secondary)] text-xs font-medium">
+                    No evaluated submissions found for this assignment yet.
+                  </div>
                 ) : (
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                  <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
                     {submissions.map(sub => (
-                      <div key={sub._id} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center group">
+                      <div key={sub._id} className="p-3.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex justify-between items-center hover:border-blue-500/40 transition-colors">
                         <div>
-                          <div className="font-bold text-sm text-slate-900 dark:text-white">{sub.student?.name}</div>
-                          <div className="text-xs text-slate-500">Score: {sub.marks} / {sub.assignment?.maxMarks || 100} • {format(new Date(sub.submittedAt), 'MMM dd')}</div>
+                          <div className="font-bold text-sm text-[var(--color-text-primary)]">{sub.student?.name || 'Student'}</div>
+                          <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                            Score: <strong className="text-emerald-500">{sub.marks}</strong> / {sub.assignment?.maxMarks || 100} • {format(new Date(sub.submittedAt), 'MMM dd')}
+                          </div>
                         </div>
                         <button
                           onClick={() => downloadSubmissionReport(sub._id)}
-                          className="p-2 rounded-lg bg-white dark:bg-slate-700 text-indigo-500 border border-slate-200 dark:border-slate-600 shadow-sm hover:bg-indigo-50 dark:hover:bg-slate-600 transition-colors"
-                          title="Download PDF"
+                          className="btn-secondary text-xs p-2 flex items-center gap-1.5 cursor-pointer text-blue-600 dark:text-sky-400 hover:text-blue-700"
+                          title="Download Evaluation PDF"
                         >
-                          <HiOutlineDocumentDownload className="w-5 h-5" />
+                          <HiOutlineDocumentDownload className="w-4 h-4" />
+                          <span>PDF</span>
                         </button>
                       </div>
                     ))}
@@ -181,29 +197,34 @@ const ReportsPage = () => {
 
               {/* Plagiarism Reports */}
               {plagiarismReports.length > 0 && (
-                <div className="glass rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-200 dark:border-slate-700/50 pb-3 flex justify-between items-center">
-                    <span>Plagiarism Reports</span>
-                    <span className="text-xs font-semibold bg-rose-500/10 text-rose-500 px-2 py-1 rounded-md">{plagiarismReports.length}</span>
+                <div className="card-pro p-6">
+                  <h3 className="text-base font-bold text-[var(--color-text-primary)] mb-4 border-b border-[var(--color-border)] pb-3 flex justify-between items-center">
+                    <span>Similarity Comparison Reports</span>
+                    <span className="text-xs font-bold bg-rose-500/10 text-rose-500 px-2.5 py-0.5 rounded-full border border-rose-500/20">
+                      {plagiarismReports.length} Comparisons
+                    </span>
                   </h3>
                   
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                  <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
                     {plagiarismReports.map(report => (
-                      <div key={report._id} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
+                      <div key={report._id} className="p-3.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex justify-between items-center hover:border-rose-500/40 transition-colors">
                         <div>
-                          <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                            {report.student1?.name} <span className="text-xs text-slate-400">vs</span> {report.student2?.name}
+                          <div className="font-bold text-sm text-[var(--color-text-primary)] flex items-center gap-2">
+                            <span>{report.student1?.name}</span>
+                            <span className="text-[10px] font-black uppercase text-slate-400 bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">vs</span>
+                            <span>{report.student2?.name}</span>
                           </div>
-                          <div className={`text-xs font-semibold mt-1 ${report.similarityScore > 70 ? 'text-rose-500' : 'text-amber-500'}`}>
-                            {report.similarityScore}% Similarity
+                          <div className={`text-xs font-bold mt-1 ${report.similarityScore > 70 ? 'text-rose-500' : 'text-amber-500'}`}>
+                            {report.similarityScore}% Similarity Convergence
                           </div>
                         </div>
                         <button
                           onClick={() => downloadPlagiarismReport(report._id)}
-                          className="p-2 rounded-lg bg-white dark:bg-slate-700 text-rose-500 border border-slate-200 dark:border-slate-600 shadow-sm hover:bg-rose-50 dark:hover:bg-slate-600 transition-colors"
-                          title="Download PDF"
+                          className="btn-secondary text-xs p-2 flex items-center gap-1.5 cursor-pointer text-rose-500 hover:text-rose-600"
+                          title="Download Plagiarism PDF"
                         >
-                          <HiOutlineDocumentDownload className="w-5 h-5" />
+                          <HiOutlineDocumentDownload className="w-4 h-4" />
+                          <span>PDF</span>
                         </button>
                       </div>
                     ))}
